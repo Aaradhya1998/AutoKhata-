@@ -27,7 +27,7 @@
   </section>
 
   <section id="app" class="hidden">
-    <header>
+    <header class="no-print">
       <h1>Auto Khata</h1>
       <button id="lock-button" type="button">Lock</button>
     </header>
@@ -53,6 +53,56 @@
         <h2>Dues</h2>
         <div id="dues-buckets"></div>
         <div id="action-panel" class="hidden"></div>
+      </section>
+
+      <section id="invoice-section">
+        <h2>Invoice</h2>
+        <div id="invoice-controls" class="no-print">
+          <label for="invoice-customer">Customer</label>
+          <select id="invoice-customer">
+            <option value="">Choose customer</option>
+          </select>
+          <div id="invoice-orders"></div>
+          <button id="invoice-create" type="button">Create invoice</button>
+          <p id="invoice-error" role="alert" aria-live="polite"></p>
+        </div>
+
+        <div id="invoice-sheet" class="hidden">
+          <h3>Invoice</h3>
+
+          <label for="inv-shop">Shop name</label>
+          <input id="inv-shop" type="text">
+
+          <label for="inv-customer-name">Customer</label>
+          <input id="inv-customer-name" type="text">
+
+          <label for="inv-date">Date</label>
+          <input id="inv-date" type="date">
+
+          <table id="inv-lines">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Unit</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody id="inv-body"></tbody>
+          </table>
+
+          <div id="inv-totals">
+            <p>Total: <span id="inv-total"></span></p>
+            <label for="inv-paid">Paid</label>
+            <input id="inv-paid" type="number" step="any" min="0">
+            <p>Amount due: <span id="inv-due"></span></p>
+          </div>
+
+          <div class="no-print">
+            <button id="inv-print" type="button">Download PDF</button>
+            <button id="inv-close" type="button">Close invoice</button>
+          </div>
+        </div>
       </section>
 
       <section id="customers-section">

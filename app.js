@@ -696,6 +696,7 @@ function renderOrders() {
 
   ordersBody.replaceChildren();
   ordersCount.textContent = `${orders.length} orders`;
+  populateInvoiceCustomers();
 
   if (newestFirst.length === 0) {
     const tableRow = document.createElement("tr");
@@ -1391,6 +1392,249 @@ function clearDuesForLock() {
   shopSaved.textContent = "";
 }
 
+/* ===== INVOICE ===== */
+
+function buildInvoiceData(orders, customerName, selectedIds, shopName, today) {
+  const customerKey = customerGroupKey(customerName);
+  const selected = new Set(Array.from(selectedIds, (id) => String(id)));
+  const matches = orders.map((order, index) => ({ order, index })).filter((entry) =>
+    customerGroupKey(entry.order.customer) === customerKey &&
+    selected.has(String(entry.order.id))
+  ).sort((a, b) => {
+    const dateOrder = String(a.order.date).localeCompare(String(b.order.date));
+    return dateOrder || a.index - b.index;
+  });
+
+  const lines = matches.map((entry) => ({
+    item: entry.order.item,
+    quantity: entry.order.quantity,
+    unit: entry.order.unit,
+    amount: entry.order.amount
+  }));
+  const paid = roundMoney(matches.reduce((sum, entry) =>
+    sum + orderMoney(entry.order.paid), 0
+  ));
+
+  return {
+    shop: String(shopName || "").trim(),
+    customer: customerName,
+    date: today,
+    lines,
+    paid
+  };
+}
+
+function invoiceTotals(lines, paid) {
+  const total = roundMoney(lines.reduce((sum, line) => {
+    const amount = Number(line.amount);
+    return sum + (Number.isFinite(amount) ? amount : 0);
+  }, 0));
+  const paidNumber = Number(paid);
+  const validPaid = Number.isFinite(paidNumber) ? paidNumber : 0;
+
+  return {
+    total,
+    due: roundMoney(total - validPaid)
+  };
+}
+
+function resetInvoiceCustomer() {
+  invoiceCustomer.replaceChildren();
+  const option = document.createElement("option");
+  option.value = "";
+  option.textContent = "Choose customer";
+  invoiceCustomer.appendChild(option);
+}
+
+function populateInvoiceCustomers() {
+  const previousKey = customerGroupKey(invoiceCustomer.value);
+  const loadedOrders = Store.load("orders");
+  const orders = Array.isArray(loadedOrders) ? loadedOrders : [];
+  const names = new Map();
+
+  for (const order of orders) {
+    const key = customerGroupKey(order.customer);
+
+    if (!names.has(key)) {
+      names.set(key, String(order.customer).trim().replace(/\s+/g, " "));
+    }
+  }
+
+  resetInvoiceCustomer();
+  const sortedNames = Array.from(names.entries()).sort((a, b) =>
+    a[1].localeCompare(b[1])
+  );
+
+  for (const [key, name] of sortedNames) {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    option.selected = key === previousKey;
+    invoiceCustomer.appendChild(option);
+  }
+
+  if (invoiceCustomer.value) {
+    renderInvoiceOrders();
+  } else {
+    invoiceOrders.replaceChildren();
+  }
+}
+
+function renderInvoiceOrders() {
+  invoiceOrders.replaceChildren();
+  invoiceError.textContent = "";
+
+  if (!invoiceCustomer.value) {
+    return;
+  }
+
+  const loadedOrders = Store.load("orders");
+  const orders = Array.isArray(loadedOrders) ? loadedOrders : [];
+  const customerKey = customerGroupKey(invoiceCustomer.value);
+  const matches = orders.filter((order) =>
+    customerGroupKey(order.customer) === customerKey
+  );
+
+  if (matches.length === 0) {
+    const message = document.createElement("p");
+    message.textContent = "No orders";
+    invoiceOrders.appendChild(message);
+    return;
+  }
+
+  for (const order of matches) {
+    const label = document.createElement("label");
+    label.className = "invoice-order-choice";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.dataset.orderId = order.id;
+    const balance = roundMoney(orderMoney(order.amount) - orderMoney(order.paid));
+    checkbox.checked = balance > 0;
+
+    const description = document.createElement("span");
+    const quantityAndUnit = `${order.quantity} ${order.unit}`.trim();
+    description.textContent = `${order.date} - ${order.item} - ${quantityAndUnit} - ${formatMoney(orderMoney(order.amount))} - Balance: ${formatMoney(balance)}`;
+
+    label.append(checkbox, description);
+    invoiceOrders.appendChild(label);
+  }
+}
+
+function createInvoiceLineInput(type, field, value) {
+  const input = document.createElement("input");
+  input.type = type;
+  input.dataset.field = field;
+  input.value = value;
+
+  if (type === "number") {
+    input.step = "any";
+
+    if (field === "amount") {
+      input.min = "0";
+    }
+  }
+
+  return input;
+}
+
+function appendInvoiceLineCell(tableRow, input) {
+  const cell = document.createElement("td");
+  cell.appendChild(input);
+  tableRow.appendChild(cell);
+}
+
+function renderInvoiceLines(lines) {
+  invBody.replaceChildren();
+
+  for (const line of lines) {
+    const row = document.createElement("tr");
+    appendInvoiceLineCell(row, createInvoiceLineInput("text", "item", line.item));
+    appendInvoiceLineCell(row, createInvoiceLineInput("number", "quantity", line.quantity));
+    appendInvoiceLineCell(row, createInvoiceLineInput("text", "unit", line.unit));
+    appendInvoiceLineCell(row, createInvoiceLineInput("number", "amount", line.amount));
+    invBody.appendChild(row);
+  }
+}
+
+function currentInvoiceLines() {
+  return Array.from(invBody.rows, (row) => ({
+    item: row.querySelector('[data-field="item"]').value,
+    quantity: row.querySelector('[data-field="quantity"]').value,
+    unit: row.querySelector('[data-field="unit"]').value,
+    amount: row.querySelector('[data-field="amount"]').value
+  }));
+}
+
+function updateInvoiceTotals() {
+  const totals = invoiceTotals(currentInvoiceLines(), invPaid.value);
+  invTotal.textContent = formatMoney(totals.total);
+  invDue.textContent = formatMoney(totals.due);
+}
+
+function createInvoice() {
+  const selectedIds = Array.from(
+    invoiceOrders.querySelectorAll('input[type="checkbox"]:checked'),
+    (checkbox) => checkbox.dataset.orderId
+  );
+
+  if (!invoiceCustomer.value || selectedIds.length === 0) {
+    invoiceError.textContent = "Choose a customer and tick at least one order";
+    return;
+  }
+
+  const loadedOrders = Store.load("orders");
+  const orders = Array.isArray(loadedOrders) ? loadedOrders : [];
+  const settings = Store.load("settings");
+  const invoice = buildInvoiceData(
+    orders,
+    invoiceCustomer.value,
+    selectedIds,
+    settings.shop_name,
+    todayLocal()
+  );
+
+  invoiceError.textContent = "";
+  invShop.value = invoice.shop;
+  invCustomerName.value = invoice.customer;
+  invDate.value = invoice.date;
+  invPaid.value = invoice.paid;
+  renderInvoiceLines(invoice.lines);
+  updateInvoiceTotals();
+  invoiceSheet.classList.remove("hidden");
+}
+
+function closeInvoiceSheet() {
+  invoiceSheet.classList.add("hidden");
+  invShop.value = "";
+  invCustomerName.value = "";
+  invDate.value = "";
+  invPaid.value = "";
+  invTotal.textContent = "";
+  invDue.textContent = "";
+  invBody.replaceChildren();
+}
+
+function printInvoice() {
+  const originalTitle = document.title;
+  const invoiceTitle = `Invoice - ${invCustomerName.value} - ${invDate.value}`;
+  const restoreTitle = () => {
+    document.title = originalTitle;
+  };
+
+  window.addEventListener("afterprint", restoreTitle, { once: true });
+  document.title = invoiceTitle;
+  window.print();
+  restoreTitle();
+}
+
+function clearInvoiceForLock() {
+  closeInvoiceSheet();
+  invoiceOrders.replaceChildren();
+  resetInvoiceCustomer();
+  invoiceError.textContent = "";
+}
+
 /* ===== UI WIRING ===== */
 
 const lockScreen = document.getElementById("lock-screen");
@@ -1426,6 +1670,20 @@ const shopSave = document.getElementById("shop-save");
 const shopSaved = document.getElementById("shop-saved");
 const duesBuckets = document.getElementById("dues-buckets");
 const actionPanel = document.getElementById("action-panel");
+const invoiceCustomer = document.getElementById("invoice-customer");
+const invoiceOrders = document.getElementById("invoice-orders");
+const invoiceCreate = document.getElementById("invoice-create");
+const invoiceError = document.getElementById("invoice-error");
+const invoiceSheet = document.getElementById("invoice-sheet");
+const invShop = document.getElementById("inv-shop");
+const invCustomerName = document.getElementById("inv-customer-name");
+const invDate = document.getElementById("inv-date");
+const invBody = document.getElementById("inv-body");
+const invTotal = document.getElementById("inv-total");
+const invPaid = document.getElementById("inv-paid");
+const invDue = document.getElementById("inv-due");
+const invPrint = document.getElementById("inv-print");
+const invClose = document.getElementById("inv-close");
 
 let unlocked = false;
 const cryptoAvailable = Boolean(window.crypto && window.crypto.subtle);
@@ -1520,11 +1778,18 @@ entryAdd.addEventListener("click", addEntryToPreview);
 previewConfirm.addEventListener("click", confirmAndSavePreview);
 previewCancel.addEventListener("click", cancelPreview);
 shopSave.addEventListener("click", saveShopName);
+invoiceCustomer.addEventListener("change", renderInvoiceOrders);
+invoiceCreate.addEventListener("click", createInvoice);
+invBody.addEventListener("input", updateInvoiceTotals);
+invPaid.addEventListener("input", updateInvoiceTotals);
+invPrint.addEventListener("click", printInvoice);
+invClose.addEventListener("click", closeInvoiceSheet);
 
 lockButton.addEventListener("click", () => {
   clearOrdersUiForLock();
   clearDashboardForLock();
   clearDuesForLock();
+  clearInvoiceForLock();
   showLockScreen();
 });
 

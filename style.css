@@ -193,6 +193,96 @@ td {
   font-weight: 700;
 }
 
+#invoice-customer {
+  min-height: 44px;
+  padding: 8px;
+  font: inherit;
+}
+
+#invoice-orders {
+  margin: 12px 0;
+}
+
+.invoice-order-choice {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 400;
+}
+
+.invoice-order-choice input {
+  width: auto;
+  min-height: auto;
+  margin-right: 8px;
+}
+
+#invoice-error {
+  color: #8b0000;
+  font-weight: 700;
+}
+
+#invoice-sheet {
+  max-width: 800px;
+  padding: 20px;
+  border: 2px solid #333333;
+  font-size: 16px;
+}
+
+#invoice-sheet input {
+  min-height: 36px;
+}
+
+#inv-lines input {
+  padding: 6px;
+  font: inherit;
+}
+
+@media print {
+  @page {
+    margin: 15mm;
+  }
+
+  body {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  #lock-screen,
+  .no-print,
+  #main > section:not(#invoice-section),
+  #invoice-section > h2 {
+    display: none !important;
+  }
+
+  #invoice-sheet {
+    display: block !important;
+    max-width: none;
+    padding: 0;
+    border: none;
+  }
+
+  #invoice-sheet input {
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #000000;
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+
+  #invoice-sheet input::-webkit-inner-spin-button,
+  #invoice-sheet input::-webkit-outer-spin-button {
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  #invoice-sheet table,
+  #invoice-sheet th,
+  #invoice-sheet td {
+    border: 1px solid #000000;
+  }
+}
+
 #preview-table input,
 #preview-table select {
   min-height: 40px;
