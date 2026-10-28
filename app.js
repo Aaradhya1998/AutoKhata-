@@ -558,7 +558,8 @@ function renderPreview() {
 
   renderUnparsedLines();
   const hasPreviewContent = previewRows.length > 0 || unparsedLines.length > 0;
-  previewSection.classList.toggle("hidden", !hasPreviewContent);
+  const addViewIsActive = document.querySelector('#tabs [aria-current="page"]')?.dataset.tab === "add";
+  previewSection.classList.toggle("hidden", !hasPreviewContent || !addViewIsActive);
 }
 
 function addEntryToPreview() {
@@ -723,7 +724,11 @@ function renderOrders() {
     appendOrderCell(tableRow, order.quantity);
     appendOrderCell(tableRow, order.amount);
     appendOrderCell(tableRow, order.paid);
-    appendPillCell(tableRow, order.status, order.status);
+    appendPillCell(
+      tableRow,
+      order.status.charAt(0).toUpperCase() + order.status.slice(1),
+      order.status
+    );
     appendOrderCell(tableRow, order.due_date);
     ordersBody.appendChild(tableRow);
   }
@@ -926,6 +931,23 @@ function renderDashboard() {
   const loadedOrders = Store.load("orders");
   const orders = Array.isArray(loadedOrders) ? loadedOrders : [];
   const dashboard = computeDashboard(orders, todayLocal());
+  const topItemsByQuantity = new Map();
+
+  for (const order of orders) {
+    const item = String(order.item).trim().toLowerCase();
+    const quantity = Number(order.quantity);
+
+    if (item && Number.isFinite(quantity)) {
+      topItemsByQuantity.set(item, (topItemsByQuantity.get(item) || 0) + quantity);
+    }
+  }
+
+  const rankedItems = Array.from(topItemsByQuantity, ([item, quantity]) => ({
+    item,
+    quantity
+  })).sort((a, b) =>
+    b.quantity - a.quantity || a.item.localeCompare(b.item)
+  ).slice(0, 5);
 
   dashTotals.replaceChildren();
   appendDashboardTotal("Sales today", formatMoney(dashboard.salesToday));
@@ -936,9 +958,13 @@ function renderDashboard() {
   renderRankedList(topCustomersList, dashboard.topCustomers, (customer) =>
     `${customer.name} - ${formatMoney(customer.total)}`
   );
-  renderRankedList(topItemsList, dashboard.topItems, (item) =>
-    `${item.item} - ${item.count} orders`
+  renderRankedList(topItemsList, rankedItems, (item) =>
+    `${item.item} - ${item.quantity} sold`
   );
+
+  const hasOrders = orders.length > 0;
+  homeEmpty.classList.toggle("hidden", hasOrders);
+  dashTotals.classList.toggle("hidden", !hasOrders);
 
   customersBody.replaceChildren();
 
@@ -1302,28 +1328,29 @@ function appendDuesHeader(table) {
   const head = document.createElement("thead");
   const row = document.createElement("tr");
 
-  for (const label of ["Customer", "Balance due", "Oldest unpaid date", "Age (days)"]) {
+  for (const label of ["Customer", "Phone", "Balance due", "Oldest unpaid date", "Remind"]) {
     const cell = document.createElement("th");
     cell.textContent = label;
     row.appendChild(cell);
   }
-
-  const actions = document.createElement("th");
-  actions.colSpan = 2;
-  actions.textContent = "Actions";
-  row.appendChild(actions);
   head.appendChild(row);
   table.appendChild(head);
 }
 
 function renderDues() {
   const loadedOrders = Store.load("orders");
+  const loadedCustomers = Store.load("customers");
   const orders = Array.isArray(loadedOrders) ? loadedOrders : [];
+  const customers = Array.isArray(loadedCustomers) ? loadedCustomers : [];
+  const phoneByCustomer = new Map(customers.map((customer) => [
+    customerGroupKey(customer.name),
+    customer.phone
+  ]));
   const buckets = computeDues(orders, todayLocal());
   const bucketTitles = [
     { key: "0-7", title: "0-7 days" },
     { key: "8-30", title: "8-30 days" },
-    { key: "31+", title: "31+ days" }
+    { key: "31+", title: "30+ days overdue" }
   ];
 
   duesBuckets.replaceChildren();
@@ -1335,9 +1362,6 @@ function renderDues() {
     const heading = document.createElement("h3");
     heading.textContent = bucket.title;
 
-    const count = document.createElement("p");
-    count.textContent = plural(buckets[bucket.key].length, "customer");
-
     const table = document.createElement("table");
     appendDuesHeader(table);
     const body = document.createElement("tbody");
@@ -1345,7 +1369,7 @@ function renderDues() {
     if (buckets[bucket.key].length === 0) {
       const row = document.createElement("tr");
       const cell = document.createElement("td");
-      cell.colSpan = 6;
+      cell.colSpan = 5;
       cell.textContent = "None";
       row.appendChild(cell);
       body.appendChild(row);
@@ -1353,9 +1377,12 @@ function renderDues() {
       for (const customer of buckets[bucket.key]) {
         const row = document.createElement("tr");
         appendDashboardCell(row, customer.name);
+        appendDashboardCell(
+          row,
+          phoneByCustomer.get(customerGroupKey(customer.name)) || "-"
+        );
         appendDashboardCell(row, formatMoney(customer.balance), "amount-due");
         appendDashboardCell(row, customer.oldestUnpaid);
-        appendDashboardCell(row, customer.ageDays);
 
         const remindCell = document.createElement("td");
         const remindButton = document.createElement("button");
@@ -1366,15 +1393,6 @@ function renderDues() {
         remindCell.appendChild(remindButton);
         row.appendChild(remindCell);
 
-        const payCell = document.createElement("td");
-        const payButton = document.createElement("button");
-        payButton.type = "button";
-        payButton.textContent = "Pay";
-        payButton.className = "btn-secondary";
-        payButton.addEventListener("click", () => openPaymentPanel(customer));
-        payCell.appendChild(payButton);
-        row.appendChild(payCell);
-
         body.appendChild(row);
       }
     }
@@ -1383,7 +1401,7 @@ function renderDues() {
     const tableWrap = document.createElement("div");
     tableWrap.className = "table-wrap";
     tableWrap.appendChild(table);
-    block.append(heading, count, tableWrap);
+    block.append(heading, tableWrap);
     duesBuckets.appendChild(block);
   }
 }
@@ -2251,7 +2269,13 @@ function showAddSavedMessage(count) {
 
 function showView(name) {
   for (const element of viewElements) {
-    element.classList.toggle("view-hidden", element.dataset.view !== name);
+    const emptyPreview = element.id === "preview-section" &&
+      previewRows.length === 0 && unparsedLines.length === 0;
+    element.classList.remove("view-hidden");
+    element.classList.toggle(
+      "hidden",
+      element.dataset.view !== name || emptyPreview
+    );
   }
 
   for (const button of tabButtons) {
@@ -2265,6 +2289,7 @@ function showView(name) {
   const loadedOrders = Store.load("orders");
   const orders = Array.isArray(loadedOrders) ? loadedOrders : [];
   homeEmpty.classList.toggle("hidden", orders.length > 0);
+  dashTotals.classList.toggle("hidden", orders.length === 0);
   window.scrollTo(0, 0);
 }
 
