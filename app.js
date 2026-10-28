@@ -1635,6 +1635,358 @@ function clearInvoiceForLock() {
   invoiceError.textContent = "";
 }
 
+/* ===== DATA ===== */
+
+function csvEscape(value) {
+  let text = value === null || value === undefined ? "" : String(value);
+
+  if (/^[=+\-@]/.test(text)) {
+    text = `'${text}`;
+  }
+
+  if (/[",\r\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  return text;
+}
+
+function csvNumber(value) {
+  return typeof value === "number" && Number.isFinite(value) ? String(value) : "";
+}
+
+function ordersToCsv(orders) {
+  const lines = ["id,date,customer,item,quantity,unit,amount,paid,due_date,status"];
+
+  for (const order of orders) {
+    lines.push([
+      csvEscape(order.id),
+      csvEscape(order.date),
+      csvEscape(order.customer),
+      csvEscape(order.item),
+      csvNumber(order.quantity),
+      csvEscape(order.unit),
+      csvNumber(order.amount),
+      csvNumber(order.paid),
+      csvEscape(order.due_date),
+      csvEscape(order.status)
+    ].join(","));
+  }
+
+  return `${lines.join("\r\n")}\r\n`;
+}
+
+function customersToCsv(customers) {
+  const lines = ["name,phone"];
+
+  for (const customer of customers) {
+    lines.push([
+      csvEscape(customer.name),
+      csvEscape(customer.phone)
+    ].join(","));
+  }
+
+  return `${lines.join("\r\n")}\r\n`;
+}
+
+function downloadFile(filename, text, mimeType) {
+  const content = mimeType.startsWith("text/csv") ? `\uFEFF${text}` : text;
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.hidden = true;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function setDataMessage(message, className) {
+  dataMessage.textContent = message;
+  dataMessage.className = className;
+}
+
+function exportOrdersCsv() {
+  const loadedOrders = Store.load("orders");
+  const orders = Array.isArray(loadedOrders) ? loadedOrders : [];
+  downloadFile(
+    `autokhata-orders-${todayLocal()}.csv`,
+    ordersToCsv(orders),
+    "text/csv;charset=utf-8"
+  );
+
+  if (orders.length === 0) {
+    setDataMessage("No orders yet. File has only the header.", "msg-ok");
+  } else {
+    setDataMessage(`Exported ${orders.length} rows.`, "msg-ok");
+  }
+}
+
+function exportCustomersCsv() {
+  const loadedCustomers = Store.load("customers");
+  const customers = Array.isArray(loadedCustomers) ? loadedCustomers : [];
+  downloadFile(
+    `autokhata-customers-${todayLocal()}.csv`,
+    customersToCsv(customers),
+    "text/csv;charset=utf-8"
+  );
+  setDataMessage(`Exported ${customers.length} rows.`, "msg-ok");
+}
+
+function buildBackup(orders, customers, settings, today) {
+  return {
+    format: "autokhata-backup",
+    version: 1,
+    exported_on: today,
+    shop_name: settings.shop_name,
+    orders,
+    customers
+  };
+}
+
+function downloadBackup() {
+  const loadedOrders = Store.load("orders");
+  const loadedCustomers = Store.load("customers");
+  const orders = Array.isArray(loadedOrders) ? loadedOrders : [];
+  const customers = Array.isArray(loadedCustomers) ? loadedCustomers : [];
+  const settings = Store.load("settings");
+  const backup = buildBackup(orders, customers, settings, todayLocal());
+  downloadFile(
+    `autokhata-backup-${todayLocal()}.json`,
+    JSON.stringify(backup, null, 2),
+    "application/json"
+  );
+  setDataMessage(
+    `Backup downloaded: ${orders.length} orders, ${customers.length} customers.`,
+    "msg-ok"
+  );
+}
+
+function validateBackup(obj) {
+  if (!obj || typeof obj !== "object" || Array.isArray(obj) ||
+      obj.format !== "autokhata-backup") {
+    return { ok: false, reason: "This file is not an Auto Khata backup." };
+  }
+
+  if (obj.version !== 1) {
+    return { ok: false, reason: "This backup version is not supported." };
+  }
+
+  if (!Array.isArray(obj.orders)) {
+    return { ok: false, reason: "orders must be an array" };
+  }
+
+  if (!Array.isArray(obj.customers)) {
+    return { ok: false, reason: "customers must be an array" };
+  }
+
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  const statuses = ["paid", "partial", "unpaid"];
+  const orders = [];
+
+  for (let index = 0; index < obj.orders.length; index += 1) {
+    const source = obj.orders[index];
+    const position = index + 1;
+
+    if (!source || typeof source !== "object" || Array.isArray(source)) {
+      return { ok: false, reason: `order ${position}: is not an object` };
+    }
+
+    if (typeof source.id !== "string" || !source.id.trim()) {
+      return { ok: false, reason: `order ${position}: id is required` };
+    }
+
+    if (typeof source.date !== "string" || !source.date.trim()) {
+      return { ok: false, reason: `order ${position}: date is required` };
+    }
+
+    if (!datePattern.test(source.date)) {
+      return { ok: false, reason: `order ${position}: date is invalid` };
+    }
+
+    if (typeof source.customer !== "string" || !source.customer.trim()) {
+      return { ok: false, reason: `order ${position}: customer is required` };
+    }
+
+    if (typeof source.item !== "string" || !source.item.trim()) {
+      return { ok: false, reason: `order ${position}: item is required` };
+    }
+
+    if (typeof source.due_date !== "string" ||
+        (source.due_date !== "" && !datePattern.test(source.due_date))) {
+      return { ok: false, reason: `order ${position}: due_date is invalid` };
+    }
+
+    if (typeof source.quantity !== "number" || !Number.isFinite(source.quantity)) {
+      return { ok: false, reason: `order ${position}: quantity is not a number` };
+    }
+
+    if (typeof source.amount !== "number" || !Number.isFinite(source.amount)) {
+      return { ok: false, reason: `order ${position}: amount is not a number` };
+    }
+
+    if (typeof source.paid !== "number" || !Number.isFinite(source.paid)) {
+      return { ok: false, reason: `order ${position}: paid is not a number` };
+    }
+
+    if (source.amount < 0) {
+      return { ok: false, reason: `order ${position}: amount must be 0 or more` };
+    }
+
+    if (source.paid < 0) {
+      return { ok: false, reason: `order ${position}: paid must be 0 or more` };
+    }
+
+    if (source.paid > source.amount + 0.01) {
+      return { ok: false, reason: `order ${position}: paid is more than amount` };
+    }
+
+    if (!statuses.includes(source.status)) {
+      return { ok: false, reason: `order ${position}: status is invalid` };
+    }
+
+    if (typeof source.unit !== "string") {
+      return { ok: false, reason: `order ${position}: unit must be text` };
+    }
+
+    orders.push({
+      id: source.id,
+      date: source.date,
+      customer: source.customer,
+      item: source.item,
+      quantity: source.quantity,
+      unit: source.unit,
+      amount: source.amount,
+      paid: source.paid,
+      due_date: source.due_date,
+      status: source.status
+    });
+  }
+
+  const customers = [];
+
+  for (let index = 0; index < obj.customers.length; index += 1) {
+    const source = obj.customers[index];
+    const position = index + 1;
+
+    if (!source || typeof source !== "object" || Array.isArray(source)) {
+      return { ok: false, reason: `customer ${position}: is not an object` };
+    }
+
+    if (typeof source.name !== "string" || !source.name.trim()) {
+      return { ok: false, reason: `customer ${position}: name is required` };
+    }
+
+    if (typeof source.phone !== "string") {
+      return { ok: false, reason: `customer ${position}: phone must be text` };
+    }
+
+    customers.push({ name: source.name, phone: source.phone });
+  }
+
+  const ids = new Set();
+
+  for (const order of orders) {
+    if (ids.has(order.id)) {
+      return { ok: false, reason: `duplicate order id: ${order.id}` };
+    }
+
+    ids.add(order.id);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(obj, "shop_name") &&
+      typeof obj.shop_name !== "string") {
+    return { ok: false, reason: "shop_name must be text" };
+  }
+
+  return {
+    ok: true,
+    orders,
+    customers,
+    shop_name: obj.shop_name
+  };
+}
+
+function refreshAfterRestore() {
+  renderOrders();
+  renderDashboard();
+  renderDues();
+  populateInvoiceCustomers();
+  loadSettingsUi();
+}
+
+function restoreBackupFile() {
+  const file = backupFile.files[0];
+
+  if (!file) {
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    let parsed;
+
+    try {
+      parsed = JSON.parse(reader.result);
+    } catch (error) {
+      setDataMessage("This file is not a valid backup (not JSON).", "msg-error");
+      backupFile.value = "";
+      return;
+    }
+
+    const result = validateBackup(parsed);
+
+    if (!result.ok) {
+      setDataMessage(result.reason, "msg-error");
+      backupFile.value = "";
+      return;
+    }
+
+    const loadedOrders = Store.load("orders");
+    const loadedCustomers = Store.load("customers");
+    const currentOrders = Array.isArray(loadedOrders) ? loadedOrders : [];
+    const currentCustomers = Array.isArray(loadedCustomers) ? loadedCustomers : [];
+    const confirmed = window.confirm(
+      `Replace current data with this backup? It has ${result.orders.length} orders and ${result.customers.length} customers. Your current data has ${currentOrders.length} orders and ${currentCustomers.length} customers. This cannot be undone.`
+    );
+
+    if (!confirmed) {
+      setDataMessage("Restore cancelled.", "msg-ok");
+      backupFile.value = "";
+      return;
+    }
+
+    Store.save("orders", result.orders);
+    Store.save("customers", result.customers);
+
+    if (typeof result.shop_name === "string") {
+      const settings = Store.load("settings");
+      settings.shop_name = result.shop_name;
+      Store.save("settings", settings);
+    }
+
+    refreshAfterRestore();
+    setDataMessage(
+      `Restored ${result.orders.length} orders and ${result.customers.length} customers.`,
+      "msg-ok"
+    );
+    backupFile.value = "";
+  });
+  reader.addEventListener("error", () => {
+    setDataMessage("This backup file could not be read.", "msg-error");
+    backupFile.value = "";
+  });
+  reader.readAsText(file);
+}
+
+function clearDataForLock() {
+  dataMessage.textContent = "";
+  dataMessage.className = "";
+  backupFile.value = "";
+}
+
 /* ===== UI WIRING ===== */
 
 const lockScreen = document.getElementById("lock-screen");
@@ -1684,6 +2036,11 @@ const invPaid = document.getElementById("inv-paid");
 const invDue = document.getElementById("inv-due");
 const invPrint = document.getElementById("inv-print");
 const invClose = document.getElementById("inv-close");
+const exportOrdersButton = document.getElementById("export-orders");
+const exportCustomersButton = document.getElementById("export-customers");
+const backupDownloadButton = document.getElementById("backup-download");
+const backupFile = document.getElementById("backup-file");
+const dataMessage = document.getElementById("data-message");
 
 let unlocked = false;
 const cryptoAvailable = Boolean(window.crypto && window.crypto.subtle);
@@ -1784,12 +2141,17 @@ invBody.addEventListener("input", updateInvoiceTotals);
 invPaid.addEventListener("input", updateInvoiceTotals);
 invPrint.addEventListener("click", printInvoice);
 invClose.addEventListener("click", closeInvoiceSheet);
+exportOrdersButton.addEventListener("click", exportOrdersCsv);
+exportCustomersButton.addEventListener("click", exportCustomersCsv);
+backupDownloadButton.addEventListener("click", downloadBackup);
+backupFile.addEventListener("change", restoreBackupFile);
 
 lockButton.addEventListener("click", () => {
   clearOrdersUiForLock();
   clearDashboardForLock();
   clearDuesForLock();
   clearInvoiceForLock();
+  clearDataForLock();
   showLockScreen();
 });
 

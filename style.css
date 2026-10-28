@@ -231,6 +231,20 @@ td {
   min-height: 36px;
 }
 
+#data-section button {
+  min-height: 40px;
+  margin: 0 8px 8px 0;
+}
+
+#data-message.msg-ok {
+  color: #111111;
+}
+
+#data-message.msg-error {
+  color: #8b0000;
+  font-weight: 700;
+}
+
 #inv-lines input {
   padding: 6px;
   font: inherit;

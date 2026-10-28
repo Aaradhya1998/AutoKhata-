@@ -105,6 +105,17 @@
         </div>
       </section>
 
+      <section id="data-section">
+        <h2>Data</h2>
+        <p>Export for Excel, or make a backup. Your data lives only in this browser, so export a backup every week.</p>
+        <button id="export-orders" type="button">Export orders CSV</button>
+        <button id="export-customers" type="button">Export customers CSV</button>
+        <button id="backup-download" type="button">Download backup</button>
+        <label for="backup-file">Restore from backup</label>
+        <input id="backup-file" type="file" accept=".json,application/json">
+        <p id="data-message" role="status" aria-live="polite"></p>
+      </section>
+
       <section id="customers-section">
         <h2>Customers</h2>
         <table id="customers-table">
