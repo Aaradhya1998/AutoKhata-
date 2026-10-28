@@ -2,7 +2,7 @@
 
 A lite, password-protected khata (credit ledger) for small shops. Record orders by typing or importing a chat file, see who owes what and for how long, send a WhatsApp reminder in one click, and create an editable invoice as PDF.
 THIS WAS BUILT DURING 6 HOUR PROMPTWARS 
-##PROMPTWARS X KICKTOTECH X HACK2SKILL X GOOGLE FOR DEVLOPERS X JSPM UNIVERSITY 
+## PROMPTWARS X KICKTOTECH X HACK2SKILL X GOOGLE FOR DEVLOPERS X JSPM UNIVERSITY 
 
 ## Features
 
