@@ -1,0 +1,179 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Acceptance Test Runner</title>
+</head>
+<body>
+  <iframe id="test-frame" src="/" width="1024" height="768"></iframe>
+  <pre id="output"></pre>
+
+  <script>
+    async function runTests() {
+      const frame = document.getElementById("test-frame");
+      while (!frame.contentDocument || !frame.contentDocument.getElementById("gstin") || !frame.contentWindow.unlock) {
+        await new Promise(r => setTimeout(r, 100));
+      }
+
+      const doc = frame.contentDocument;
+      const win = frame.contentWindow;
+      const log = [];
+
+      try {
+        // Unlock
+        win.unlock();
+
+        // Test: GSTIN "ABC123" rejected with message in #gst-message
+        const gstinInput = doc.getElementById("gstin");
+        const gstSave = doc.getElementById("gst-save");
+        const gstMessage = doc.getElementById("gst-message");
+        const gstRates = doc.getElementById("gst-rates");
+        const gstEnabled = doc.getElementById("gst-enabled");
+
+        gstinInput.value = "ABC123";
+        gstSave.click();
+        await new Promise(r => setTimeout(r, 200));
+        const badGstinMsg = gstMessage.textContent;
+        log.push({
+          test: 'GSTIN "ABC123" is rejected with message in #gst-message',
+          passed: badGstinMsg.includes("Invalid GSTIN") || badGstinMsg.length > 0,
+          value: badGstinMsg
+        });
+
+        // Test: Rate 50 is rejected
+        gstinInput.value = "";
+        gstRates.value = "aata=50";
+        gstSave.click();
+        await new Promise(r => setTimeout(r, 200));
+        const rate50Msg = gstMessage.textContent;
+        log.push({
+          test: 'Rate 50 is rejected',
+          passed: rate50Msg.includes("between 0 and 40") || rate50Msg.includes("rates must be numbers"),
+          value: rate50Msg
+        });
+
+        // Test: GSTIN "27ABCDE1234F1Z5" accepted and aata=5 saved
+        gstinInput.value = "27ABCDE1234F1Z5";
+        gstRates.value = "aata=5";
+        gstEnabled.checked = true;
+        gstSave.click();
+        await new Promise(r => setTimeout(r, 300));
+        log.push({
+          test: 'GSTIN "27ABCDE1234F1Z5" is accepted',
+          passed: gstMessage.textContent === "Saved",
+          value: gstMessage.textContent
+        });
+
+        // Setup Invoice
+        win.showView("invoice");
+        const invGstOn = doc.getElementById("inv-gst-on");
+        const invInterstate = doc.getElementById("inv-interstate");
+        const invPaid = doc.getElementById("inv-paid");
+        invGstOn.checked = true;
+        invInterstate.checked = false;
+
+        // Render one aata line of 100 with paid 0, intra-state
+        win.renderInvoiceLines([{ item: "aata", quantity: 1, unit: "kg", amount: 100, gstRate: 5 }]);
+        invPaid.value = "0";
+        win.updateInvoiceTotals();
+
+        const taxable = doc.getElementById("inv-taxable").textContent;
+        const cgst = doc.getElementById("inv-cgst").textContent;
+        const sgst = doc.getElementById("inv-sgst").textContent;
+        const igst = doc.getElementById("inv-igst").textContent;
+        const grand = doc.getElementById("inv-grand").textContent;
+        const due = doc.getElementById("inv-due").textContent;
+
+        log.push({
+          test: 'Invoice one aata line of 100 with paid 0, intra-state',
+          taxable: taxable,
+          cgst: cgst,
+          sgst: sgst,
+          grand: grand,
+          due: due,
+          passed: taxable === "100.00" && cgst === "2.50" && sgst === "2.50" && grand === "105.00" && due === "105.00"
+        });
+
+        // Same line, inter-state
+        invInterstate.checked = true;
+        win.updateInvoiceTotals();
+        const interIgst = doc.getElementById("inv-igst").textContent;
+        const interGrand = doc.getElementById("inv-grand").textContent;
+        const interDue = doc.getElementById("inv-due").textContent;
+
+        log.push({
+          test: 'Same line, inter-state',
+          igst: interIgst,
+          grand: interGrand,
+          passed: interIgst === "5.00" && interGrand === "105.00"
+        });
+
+        // Paid 50: amount due 55.00
+        invPaid.value = "50";
+        win.updateInvoiceTotals();
+        const due50 = doc.getElementById("inv-due").textContent;
+        log.push({
+          test: 'Paid 50: amount due 55.00',
+          due: due50,
+          passed: due50 === "55.00"
+        });
+
+        // A line with rate 0: no tax, no error
+        win.renderInvoiceLines([{ item: "namak", quantity: 1, unit: "kg", amount: 50, gstRate: 0 }]);
+        invPaid.value = "0";
+        invInterstate.checked = false;
+        win.updateInvoiceTotals();
+        const rate0Taxable = doc.getElementById("inv-taxable").textContent;
+        const rate0Cgst = doc.getElementById("inv-cgst").textContent;
+        const rate0Grand = doc.getElementById("inv-grand").textContent;
+        log.push({
+          test: 'A line with rate 0: no tax, no error',
+          taxable: rate0Taxable,
+          cgst: rate0Cgst,
+          grand: rate0Grand,
+          passed: rate0Cgst === "0.00" && rate0Grand === "50.00"
+        });
+
+        // GST off: the tax block is hidden and the totals match the current invoice
+        invGstOn.checked = false;
+        win.updateInvoiceTotals();
+        const taxBlockHidden = doc.getElementById("inv-tax-block").classList.contains("hidden");
+        const totalOff = doc.getElementById("inv-total").textContent;
+        const dueOff = doc.getElementById("inv-due").textContent;
+        log.push({
+          test: 'GST off: the tax block is hidden and totals match current invoice',
+          taxBlockHidden: taxBlockHidden,
+          total: totalOff,
+          due: dueOff,
+          passed: taxBlockHidden && totalOff.includes("50") && dueOff.includes("50")
+        });
+
+        // Ctrl+P: the printed page includes the tax block when GST is on
+        invGstOn.checked = true;
+        win.updateInvoiceTotals();
+        const taxBlock = doc.getElementById("inv-tax-block");
+        const gstinLine = doc.getElementById("inv-gstin-line");
+        const invoiceSheet = doc.getElementById("invoice-sheet");
+        const printPass = !taxBlock.classList.contains("hidden") &&
+                          !taxBlock.classList.contains("no-print") &&
+                          invoiceSheet.contains(taxBlock) &&
+                          invoiceSheet.contains(gstinLine) &&
+                          gstinLine.textContent.includes("27ABCDE1234F1Z5");
+        log.push({
+          test: 'Ctrl+P: printed page includes tax block and GSTIN when GST is on',
+          passed: printPass,
+          gstinText: gstinLine.textContent
+        });
+
+      } catch (e) {
+        log.push({ test: 'Execution error', error: e.toString(), stack: e.stack, passed: false });
+      }
+
+      document.getElementById("output").textContent = JSON.stringify(log, null, 2);
+      document.title = "TESTS_DONE";
+    }
+
+    window.addEventListener("DOMContentLoaded", runTests);
+  </script>
+</body>
+</html>

@@ -28,7 +28,11 @@ const Store = {
         shop_name: "",
         password_salt: "",
         password_hash: "",
-        default_language: "en"
+        default_language: "en",
+        gst_enabled: false,
+        gstin: "",
+        gst_rates: {},
+        interstate: false
       };
     }
 
@@ -1410,6 +1414,126 @@ function loadSettingsUi() {
   const settings = Store.load("settings");
   shopNameInput.value = settings.shop_name;
   shopSaved.textContent = "";
+
+  if (gstEnabledCheckbox) gstEnabledCheckbox.checked = Boolean(settings.gst_enabled);
+  if (gstinInput) gstinInput.value = settings.gstin || "";
+  if (gstRatesTextarea) {
+    const rates = settings.gst_rates || {};
+    gstRatesTextarea.value = Object.entries(rates)
+      .map(([item, rate]) => `${item}=${rate}`)
+      .join("\n");
+  }
+  if (gstMessage) {
+    gstMessage.textContent = "";
+    gstMessage.className = "";
+  }
+  if (invGstOn) invGstOn.checked = Boolean(settings.gst_enabled);
+  if (invInterstate) invInterstate.checked = Boolean(settings.interstate);
+
+  if (window.fetch) {
+    fetch("/api/gst")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data) return;
+        const current = Store.load("settings");
+        current.gst_enabled = data.gst_enabled;
+        current.gstin = data.gstin;
+        current.gst_rates = data.gst_rates;
+        current.interstate = data.interstate;
+        Store.save("settings", current);
+
+        if (gstEnabledCheckbox) gstEnabledCheckbox.checked = Boolean(data.gst_enabled);
+        if (gstinInput) gstinInput.value = data.gstin || "";
+        if (gstRatesTextarea) {
+          gstRatesTextarea.value = Object.entries(data.gst_rates || {})
+            .map(([item, rate]) => `${item}=${rate}`)
+            .join("\n");
+        }
+        if (invGstOn) invGstOn.checked = Boolean(data.gst_enabled);
+        if (invInterstate) invInterstate.checked = Boolean(data.interstate);
+      })
+      .catch(() => {});
+  }
+}
+
+async function saveGstSettings() {
+  if (!gstMessage) return;
+  gstMessage.textContent = "";
+  gstMessage.className = "";
+
+  const enabled = gstEnabledCheckbox ? gstEnabledCheckbox.checked : false;
+  const gstin = gstinInput ? gstinInput.value.trim() : "";
+  const gstinPattern = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+
+  if (gstin && !gstinPattern.test(gstin)) {
+    gstMessage.textContent = "Invalid GSTIN format";
+    gstMessage.className = "error-message";
+    return;
+  }
+
+  const rawLines = gstRatesTextarea ? gstRatesTextarea.value.split("\n") : [];
+  const rates = {};
+  for (const rawLine of rawLines) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    const parts = line.split("=");
+    if (parts.length !== 2) {
+      gstMessage.textContent = "Rates must be in the form item=rate (e.g. aata=5)";
+      gstMessage.className = "error-message";
+      return;
+    }
+    const item = parts[0].trim();
+    const rateVal = Number(parts[1].trim());
+    if (!item) {
+      gstMessage.textContent = "Item name cannot be empty";
+      gstMessage.className = "error-message";
+      return;
+    }
+    if (!Number.isFinite(rateVal) || rateVal < 0 || rateVal > 40) {
+      gstMessage.textContent = "Rates must be numbers between 0 and 40";
+      gstMessage.className = "error-message";
+      return;
+    }
+    rates[item] = rateVal;
+  }
+
+  const settings = Store.load("settings");
+  const interstate = invInterstate ? invInterstate.checked : Boolean(settings.interstate);
+
+  const payload = {
+    gst_enabled: enabled,
+    gstin,
+    gst_rates: rates,
+    interstate
+  };
+
+  try {
+    const res = await fetch("/api/gst", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      gstMessage.textContent = data.error || "Failed to save GST settings";
+      gstMessage.className = "error-message";
+      return;
+    }
+    settings.gst_enabled = data.gst_enabled;
+    settings.gstin = data.gstin;
+    settings.gst_rates = data.gst_rates;
+    settings.interstate = data.interstate;
+    Store.save("settings", settings);
+
+    if (invGstOn) invGstOn.checked = data.gst_enabled;
+    if (invInterstate) invInterstate.checked = data.interstate;
+
+    gstMessage.textContent = "Saved";
+    gstMessage.className = "";
+  } catch (err) {
+    gstMessage.textContent = "Network error";
+    gstMessage.className = "error-message";
+  }
 }
 
 function saveShopName() {
@@ -1425,9 +1549,62 @@ function clearDuesForLock() {
   closeActionPanel();
   shopNameInput.value = "";
   shopSaved.textContent = "";
+  if (gstEnabledCheckbox) gstEnabledCheckbox.checked = false;
+  if (gstinInput) gstinInput.value = "";
+  if (gstRatesTextarea) gstRatesTextarea.value = "";
+  if (gstMessage) gstMessage.textContent = "";
 }
 
 /* ===== INVOICE ===== */
+
+function roundHalfUp2(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 0;
+  return Number(Math.round(Number(number + "e2")) + "e-2");
+}
+
+function invoiceTaxCalculations(lines, paid, isInterstate) {
+  let taxable = 0;
+  let totalTax = 0;
+
+  for (const line of lines) {
+    const amount = Number(line.amount);
+    const validAmount = Number.isFinite(amount) ? amount : 0;
+    const rate = Number(line.gstRate);
+    const validRate = Number.isFinite(rate) ? rate : 0;
+
+    taxable = roundHalfUp2(taxable + validAmount);
+    const lineTax = roundHalfUp2((validAmount * validRate) / 100);
+    totalTax = roundHalfUp2(totalTax + lineTax);
+  }
+
+  const paidNumber = Number(paid);
+  const validPaid = Number.isFinite(paidNumber) ? paidNumber : 0;
+
+  let cgst = 0;
+  let sgst = 0;
+  let igst = 0;
+
+  if (isInterstate) {
+    igst = totalTax;
+  } else {
+    cgst = roundHalfUp2(totalTax / 2);
+    sgst = roundHalfUp2(totalTax - cgst);
+  }
+
+  const grand = roundHalfUp2(taxable + totalTax);
+  const due = roundHalfUp2(grand - validPaid);
+
+  return {
+    taxable,
+    totalTax,
+    cgst,
+    sgst,
+    igst,
+    grand,
+    due
+  };
+}
 
 function buildInvoiceData(orders, customerName, selectedIds, shopName, today) {
   const customerKey = customerGroupKey(customerName);
@@ -1440,12 +1617,28 @@ function buildInvoiceData(orders, customerName, selectedIds, shopName, today) {
     return dateOrder || a.index - b.index;
   });
 
-  const lines = matches.map((entry) => ({
-    item: entry.order.item,
-    quantity: entry.order.quantity,
-    unit: entry.order.unit,
-    amount: entry.order.amount
-  }));
+  const settings = Store.load("settings");
+  const gstRates = settings.gst_rates || {};
+
+  const lines = matches.map((entry) => {
+    const item = String(entry.order.item || "").trim();
+    let rate = 0;
+    if (gstRates[item] !== undefined) {
+      rate = gstRates[item];
+    } else {
+      const matchKey = Object.keys(gstRates).find(
+        (k) => k.toLowerCase() === item.toLowerCase()
+      );
+      if (matchKey) rate = gstRates[matchKey];
+    }
+    return {
+      item: entry.order.item,
+      quantity: entry.order.quantity,
+      unit: entry.order.unit,
+      amount: entry.order.amount,
+      gstRate: rate
+    };
+  });
   const paid = roundMoney(matches.reduce((sum, entry) =>
     sum + orderMoney(entry.order.paid), 0
   ));
@@ -1581,6 +1774,8 @@ function appendInvoiceLineCell(tableRow, input) {
 
 function renderInvoiceLines(lines) {
   invBody.replaceChildren();
+  const settings = Store.load("settings");
+  const gstRates = settings.gst_rates || {};
 
   for (const line of lines) {
     const row = document.createElement("tr");
@@ -1588,23 +1783,92 @@ function renderInvoiceLines(lines) {
     appendInvoiceLineCell(row, createInvoiceLineInput("number", "quantity", line.quantity));
     appendInvoiceLineCell(row, createInvoiceLineInput("text", "unit", line.unit));
     appendInvoiceLineCell(row, createInvoiceLineInput("number", "amount", line.amount));
+
+    let rate = line.gstRate;
+    if (rate === undefined || rate === null) {
+      const item = String(line.item || "").trim();
+      if (gstRates[item] !== undefined) {
+        rate = gstRates[item];
+      } else {
+        const matchKey = Object.keys(gstRates).find(
+          (k) => k.toLowerCase() === item.toLowerCase()
+        );
+        rate = matchKey ? gstRates[matchKey] : 0;
+      }
+    }
+    const rateInput = createInvoiceLineInput("number", "gst-rate", rate);
+    rateInput.className = "inv-gst-rate";
+    rateInput.min = "0";
+    rateInput.max = "40";
+    rateInput.step = "any";
+    appendInvoiceLineCell(row, rateInput);
+
     invBody.appendChild(row);
   }
 }
 
 function currentInvoiceLines() {
   return Array.from(invBody.rows, (row) => ({
-    item: row.querySelector('[data-field="item"]').value,
-    quantity: row.querySelector('[data-field="quantity"]').value,
-    unit: row.querySelector('[data-field="unit"]').value,
-    amount: row.querySelector('[data-field="amount"]').value
+    item: row.querySelector('[data-field="item"]')?.value ?? "",
+    quantity: row.querySelector('[data-field="quantity"]')?.value ?? "",
+    unit: row.querySelector('[data-field="unit"]')?.value ?? "",
+    amount: row.querySelector('[data-field="amount"]')?.value ?? "",
+    gstRate: row.querySelector('[data-field="gst-rate"]')?.value ?? "0"
   }));
 }
 
 function updateInvoiceTotals() {
-  const totals = invoiceTotals(currentInvoiceLines(), invPaid.value);
-  invTotal.textContent = formatMoney(totals.total);
-  invDue.textContent = formatMoney(totals.due);
+  const lines = currentInvoiceLines();
+  const settings = Store.load("settings");
+  const isGstOn = invGstOn ? invGstOn.checked : Boolean(settings.gst_enabled);
+  const isInterstate = invInterstate ? invInterstate.checked : Boolean(settings.interstate);
+
+  const baseTotals = invoiceTotals(lines, invPaid.value);
+
+  const gstColHeader = document.querySelector("#inv-lines th.inv-gst-col");
+  if (gstColHeader) {
+    gstColHeader.style.display = isGstOn ? "" : "none";
+  }
+  for (const row of invBody.rows) {
+    const cell = row.querySelector(".inv-gst-rate")?.closest("td");
+    if (cell) cell.style.display = isGstOn ? "" : "none";
+  }
+
+  if (!isGstOn) {
+    if (invTaxBlock) invTaxBlock.classList.add("hidden");
+    if (invGstinLine) {
+      invGstinLine.textContent = "";
+      invGstinLine.classList.add("hidden");
+    }
+    invTotal.textContent = formatMoney(baseTotals.total);
+    invDue.textContent = formatMoney(baseTotals.due);
+    return;
+  }
+
+  // GST is ON
+  if (invTaxBlock) invTaxBlock.classList.remove("hidden");
+
+  if (invGstinLine) {
+    const gstin = (settings.gstin || "").trim();
+    if (gstin) {
+      invGstinLine.textContent = `GSTIN: ${gstin}`;
+      invGstinLine.classList.remove("hidden");
+    } else {
+      invGstinLine.textContent = "";
+      invGstinLine.classList.add("hidden");
+    }
+  }
+
+  const taxResult = invoiceTaxCalculations(lines, invPaid.value, isInterstate);
+
+  if (invTaxable) invTaxable.textContent = taxResult.taxable.toFixed(2);
+  if (invCgst) invCgst.textContent = taxResult.cgst.toFixed(2);
+  if (invSgst) invSgst.textContent = taxResult.sgst.toFixed(2);
+  if (invIgst) invIgst.textContent = taxResult.igst.toFixed(2);
+  if (invGrand) invGrand.textContent = taxResult.grand.toFixed(2);
+
+  invTotal.textContent = formatMoney(taxResult.taxable);
+  invDue.textContent = taxResult.due.toFixed(2);
 }
 
 function createInvoice() {
@@ -1621,6 +1885,10 @@ function createInvoice() {
   const loadedOrders = Store.load("orders");
   const orders = Array.isArray(loadedOrders) ? loadedOrders : [];
   const settings = Store.load("settings");
+
+  if (invGstOn) invGstOn.checked = Boolean(settings.gst_enabled);
+  if (invInterstate) invInterstate.checked = Boolean(settings.interstate);
+
   const invoice = buildInvoiceData(
     orders,
     invoiceCustomer.value,
@@ -1647,6 +1915,12 @@ function closeInvoiceSheet() {
   invPaid.value = "";
   invTotal.textContent = "";
   invDue.textContent = "";
+  if (invTaxable) invTaxable.textContent = "";
+  if (invCgst) invCgst.textContent = "";
+  if (invSgst) invSgst.textContent = "";
+  if (invIgst) invIgst.textContent = "";
+  if (invGrand) invGrand.textContent = "";
+  if (invGstinLine) invGstinLine.textContent = "";
   invBody.replaceChildren();
 }
 
@@ -2326,6 +2600,11 @@ const pairsList = document.getElementById("pairs-list");
 const shopNameInput = document.getElementById("shop-name");
 const shopSave = document.getElementById("shop-save");
 const shopSaved = document.getElementById("shop-saved");
+const gstEnabledCheckbox = document.getElementById("gst-enabled");
+const gstinInput = document.getElementById("gstin");
+const gstRatesTextarea = document.getElementById("gst-rates");
+const gstSaveButton = document.getElementById("gst-save");
+const gstMessage = document.getElementById("gst-message");
 const duesBuckets = document.getElementById("dues-buckets");
 const actionPanel = document.getElementById("action-panel");
 const invoiceCustomer = document.getElementById("invoice-customer");
@@ -2340,6 +2619,15 @@ const invBody = document.getElementById("inv-body");
 const invTotal = document.getElementById("inv-total");
 const invPaid = document.getElementById("inv-paid");
 const invDue = document.getElementById("inv-due");
+const invGstOn = document.getElementById("inv-gst-on");
+const invInterstate = document.getElementById("inv-interstate");
+const invTaxBlock = document.getElementById("inv-tax-block");
+const invTaxable = document.getElementById("inv-taxable");
+const invCgst = document.getElementById("inv-cgst");
+const invSgst = document.getElementById("inv-sgst");
+const invIgst = document.getElementById("inv-igst");
+const invGrand = document.getElementById("inv-grand");
+const invGstinLine = document.getElementById("inv-gstin-line");
 const invPrint = document.getElementById("inv-print");
 const invClose = document.getElementById("inv-close");
 const exportOrdersButton = document.getElementById("export-orders");
@@ -2526,9 +2814,36 @@ entryText.addEventListener("keydown", (event) => {
 previewConfirm.addEventListener("click", confirmAndSavePreview);
 previewCancel.addEventListener("click", cancelPreview);
 shopSave.addEventListener("click", saveShopName);
+if (gstSaveButton) gstSaveButton.addEventListener("click", saveGstSettings);
 invoiceCustomer.addEventListener("change", renderInvoiceOrders);
 invoiceCreate.addEventListener("click", createInvoice);
+if (invGstOn) invGstOn.addEventListener("change", updateInvoiceTotals);
+if (invInterstate) invInterstate.addEventListener("change", updateInvoiceTotals);
 invBody.addEventListener("input", updateInvoiceTotals);
+invBody.addEventListener("change", (e) => {
+  if (e.target && e.target.dataset.field === "item") {
+    const row = e.target.closest("tr");
+    if (row) {
+      const rateInput = row.querySelector(".inv-gst-rate");
+      if (rateInput) {
+        const item = String(e.target.value || "").trim();
+        const settings = Store.load("settings");
+        const gstRates = settings.gst_rates || {};
+        let rate = 0;
+        if (gstRates[item] !== undefined) {
+          rate = gstRates[item];
+        } else {
+          const matchKey = Object.keys(gstRates).find(
+            (k) => k.toLowerCase() === item.toLowerCase()
+          );
+          rate = matchKey ? gstRates[matchKey] : 0;
+        }
+        rateInput.value = rate;
+        updateInvoiceTotals();
+      }
+    }
+  }
+});
 invPaid.addEventListener("input", updateInvoiceTotals);
 invPrint.addEventListener("click", printInvoice);
 invClose.addEventListener("click", closeInvoiceSheet);

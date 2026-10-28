@@ -594,3 +594,17 @@ tbody tr:last-child td {
     border: 1px solid #000000;
   }
 }
+
+.inv-gst-rate {
+  width: 80px;
+}
+
+#inv-tax-block {
+  margin: 12px 0;
+}
+
+#inv-gstin-line {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--muted);
+}

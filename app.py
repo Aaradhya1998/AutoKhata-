@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import math
 import os
+import re
 import secrets
 from functools import wraps
 
@@ -292,6 +293,72 @@ def settings_api():
         {
             "shop_name": settings.get("shop_name", ""),
             "default_language": settings.get("default_language", "en"),
+        }
+    )
+
+
+GSTIN_REGEX = re.compile(r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$")
+
+
+@app.route("/api/gst", methods=["GET", "POST"])
+@require_unlocked
+def gst_api():
+    settings = store.read_settings()
+    if request.method == "POST":
+        payload = request.get_json(silent=True) or {}
+        if not isinstance(payload, dict):
+            return api_error("Invalid payload")
+
+        gst_enabled = payload.get("gst_enabled", settings.get("gst_enabled", False))
+        if not isinstance(gst_enabled, bool):
+            return api_error("gst_enabled must be a boolean")
+
+        gstin = payload.get("gstin", settings.get("gstin", ""))
+        if not isinstance(gstin, str):
+            return api_error("gstin must be text")
+        gstin = gstin.strip()
+        if gstin and not GSTIN_REGEX.match(gstin):
+            return api_error("Invalid GSTIN format")
+
+        raw_rates = payload.get("gst_rates", settings.get("gst_rates", {}))
+        if not isinstance(raw_rates, dict):
+            return api_error("gst_rates must be an object")
+
+        gst_rates = {}
+        for item, rate in raw_rates.items():
+            if not isinstance(item, str) or not item.strip():
+                return api_error("Item name must be text")
+            if isinstance(rate, bool) or not isinstance(rate, (int, float)):
+                try:
+                    rate = float(rate)
+                except (TypeError, ValueError):
+                    return api_error(f"Rate for {item} must be a number")
+            if not math.isfinite(rate) or rate < 0 or rate > 40:
+                return api_error("rates must be numbers from 0 to 40")
+            gst_rates[item.strip()] = rate
+
+        interstate = payload.get(
+            "interstate",
+            payload.get("interstate_default", settings.get("interstate", False)),
+        )
+        if not isinstance(interstate, bool):
+            return api_error("interstate must be a boolean")
+
+        settings["gst_enabled"] = gst_enabled
+        settings["gstin"] = gstin
+        settings["gst_rates"] = gst_rates
+        settings["interstate"] = interstate
+        store.write_settings(settings)
+
+    return jsonify(
+        {
+            "gst_enabled": bool(settings.get("gst_enabled", False)),
+            "gstin": str(settings.get("gstin", "")),
+            "gst_rates": settings.get("gst_rates", {})
+            if isinstance(settings.get("gst_rates"), dict)
+            else {},
+            "interstate": bool(settings.get("interstate", False)),
+            "interstate_default": bool(settings.get("interstate", False)),
         }
     )
 
