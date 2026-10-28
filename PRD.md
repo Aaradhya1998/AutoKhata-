@@ -1,149 +1,183 @@
-# Auto Khata: Product Requirements Document (MVP)
+# Auto Khata: Product Requirements Document
 
-**Version:** 0.1
-**Status:** Draft for hackathon build
-**Platform:** Desktop browser first (PC), responsive for mobile later
-
----
+**Version:** 0.2  
+**Status:** Implemented MVP  
+**Platform:** Local Windows PC, Chrome or Edge  
+**Architecture:** Flask server on `127.0.0.1`, pandas-managed CSV storage, plain HTML/CSS/JavaScript frontend
 
 ## 1. Problem
 
-Small shop owners (kirana, general stores, local traders) track sales and credit ("khata", "udhaar") in notebooks, phone chats, or memory. Result: owners forget who owes money, lose track of how long a debt has been open, and chase payments awkwardly. Orders often arrive as messy WhatsApp messages, which are slow to record one by one.
+Small shop owners often track sales and credit (khata or udhaar) in notebooks, chat messages, or memory. Orders are slow to record, outstanding balances are easy to forget, and following up on old debts is awkward.
 
-## 2. Goal
+## 2. Product Goal
 
-Give a shop owner one simple, password-protected dashboard where they can:
+Auto Khata gives one shop owner a simple local application where they can:
 
-1. Record sales and orders quickly, by typing or by importing a chat/text file.
-2. See who owes how much, and for how long.
-3. Send a payment reminder on WhatsApp in one click.
-4. Generate an editable invoice as PDF.
+1. Record sales quickly from shorthand text or a `.txt`/WhatsApp chat export.
+2. Review parsed orders before saving anything.
+3. See sales, balances, customers with dues, and debt age.
+4. Record full or partial payments.
+5. prepare a WhatsApp reminder without sending it automatically.
+6. Create an editable invoice and save it through the browser print dialog.
+7. Export CSV files and make or restore a JSON backup.
 
 ## 3. Target User
 
-- **Primary:** Owner of a small shop with 20 to 200 regular credit customers.
-- **Skill level:** Uses WhatsApp and a smartphone daily. Comfortable with a PC browser for a dashboard. Not technical.
+- Owner of a small shop with approximately 20 to 200 regular customers.
+- Comfortable with WhatsApp and basic browser use, but not expected to manage technical systems.
+- Uses one Windows PC as the primary ledger device.
 
 ## 4. Scope
 
-### In scope (MVP)
+### In scope
 
-| # | Feature | Description |
-|---|---------|-------------|
-| F1 | Password lock | Owner sets a password once. Dashboard is hidden until it is entered. |
-| F2 | Dashboard analytics | Totals: sales today and this month, total outstanding dues, number of customers with dues, top customers, top items. |
-| F3 | Customer sales and debts | List of customers with total sales, amount paid, balance due, and oldest unpaid date. |
-| F4 | Item correlation | Shows which items are often bought together (simple pair counts), e.g. "Atta + Oil in 18 orders". |
-| F5 | Quick entry (text box) | Owner types an order in shorthand, e.g. `Ravi 2kg aata 1 tel oil pending`. Parsed and saved. |
-| F6 | Text or chat file import | Upload a `.txt` (including a WhatsApp chat export). Parser turns lines into orders. Owner reviews before saving. |
-| F7 | CSV export | All records downloadable as CSV that opens cleanly in Excel. |
-| F8 | Reminders with due dates | Each credit sale can have a due date. Dashboard lists overdue and due-soon customers. |
-| F9 | One-click WhatsApp reminder | Button opens `wa.me/<number>?text=<prefilled message>`. Owner taps Send in WhatsApp. |
-| F10 | Editable invoice to PDF | Invoice auto-filled with shop name and bill lines. Owner can edit fields, then download PDF. |
+| Feature | Current requirement |
+|---|---|
+| Local password lock | First-run password setup, login, session-based unlock, and manual Lock button. |
+| Quick entry | Parse shorthand order lines and show an editable preview. |
+| Text/chat import | Parse plain order lines and supported WhatsApp export timestamps. |
+| Orders and customers | Persist exact order and customer record shapes in CSV files. |
+| Dashboard | Sales today/month, dues, customers with dues, top customers, top items, and item pairs. |
+| Dues and payments | Group debts by age and record full or partial payments. |
+| Reminders | Build an editable message and open a `wa.me` link for manual sending. |
+| Invoice | Select orders, edit invoice fields, and use print-to-PDF. |
+| Data tools | Export orders/customers CSV and download/restore JSON backups. |
+| Settings | Persist the shop name. |
 
-### Out of scope (MVP)
+### Out of scope
 
-- Automatic or scheduled WhatsApp sending (violates WhatsApp terms; reminders are manual by design)
-- Live WhatsApp message sync or WhatsApp Web scraping
-- Multi-user accounts, cloud login, or server-side database
-- Payment gateway integration (UPI, Razorpay, etc.)
-- GST calculation and filing
-- Inventory stock counts and purchase tracking
-- Native mobile app (responsive layout is a later step)
+- Automatic or scheduled WhatsApp sending.
+- WhatsApp Web scraping or live message sync.
+- Cloud hosting, device sync, and multi-user accounts.
+- A database server; storage remains local CSV/JSON files.
+- Exposing Flask to the LAN or internet.
+- GST filing, payment gateways, and inventory management.
+- Encryption of the ledger files.
+- Password reset or recovery.
+- Native mobile applications.
 
-## 5. User Stories
+## 5. Functional Requirements
 
-1. As an owner, I set a password once so my customers' data is not visible to others using the PC.
-2. As an owner, I type `Ravi 2kg aata 1 tel oil pending` and it appears as an order under Ravi, with balance due.
-3. As an owner, I upload my day's chat export and review parsed lines before saving.
-4. As an owner, I open "Dues" and see who owes money, sorted by how old the debt is.
-5. As an owner, I click "Remind" next to a customer and WhatsApp opens with a polite message ready to send.
-6. As an owner, I record a partial payment and the balance updates.
-7. As an owner, I create an invoice for a customer, edit the shop name or a line item, and download it as PDF.
-8. As an owner, I export all data to CSV and open it in Excel.
+### 5.1 Access and session
 
-## 6. Functional Requirements
+- **FR-1:** On first use, the server accepts a new password only when it contains at least 6 characters.
+- **FR-2:** The dashboard and all ledger API routes remain unavailable until the Flask session is unlocked.
+- **FR-3:** The Lock button clears the unlocked session and returns to the password screen.
+- **FR-4:** The server stores a random salt and an `hashlib.scrypt` password hash in `data/settings.json`. It never stores the plain password.
+- **FR-5:** Wrong login attempts return a clear error without revealing hash, salt, or diagnostic details.
+- **FR-6:** The server binds to `127.0.0.1:5000` only.
 
-### 6.1 Access
-- FR-1: On first launch, the app asks the owner to set a password (minimum 6 characters).
-- FR-2: Subsequent launches require the password before any data is shown.
-- FR-3: A "Lock" button returns to the password screen.
-- FR-4: Password is stored as a salted SHA-256 hash, never in plain text.
+### 5.2 Server data
 
-### 6.2 Data
-- FR-5: All data is stored in a single CSV-compatible structure in browser `localStorage`, with an Export and Import option for backup.
-- FR-6: Each order record has: `id`, `date`, `customer`, `item`, `quantity`, `unit`, `amount`, `paid`, `due_date`, `status` (paid / partial / unpaid).
-- FR-7: Each customer record has: `name`, `phone` (with country code, e.g. 91XXXXXXXXXX).
+- **FR-7:** Orders persist in `data/orders.csv`, managed through pandas.
+- **FR-8:** An order has exactly: `id`, `date`, `customer`, `item`, `quantity`, `unit`, `amount`, `paid`, `due_date`, `status`.
+- **FR-9:** Order status is `paid`, `partial`, or `unpaid`.
+- **FR-10:** Customers persist in `data/customers.csv` with exactly `name` and `phone`.
+- **FR-11:** Phone numbers include a country code when used for WhatsApp, for example `91XXXXXXXXXX`.
+- **FR-12:** Shop name, password salt/hash, default language, and the generated Flask session secret persist in `data/settings.json`.
+- **FR-13:** CSV and settings writes use a temporary file followed by replacement of the destination file.
+- **FR-14:** Empty CSV files are created on first run with their required header rows.
 
-### 6.3 Quick Entry and Import
-- FR-8: Quick entry parses lines of the form `<customer> <qty><unit> <item> [<amount>] [pending|paid]`.
-- FR-9: Import accepts `.txt` files. Each line is parsed with the same parser as quick entry.
-- FR-10: Unparsed lines are shown separately so the owner can fix or skip them.
-- FR-11: Parsed rows appear in an editable preview. Nothing is saved until the owner confirms.
+### 5.3 Quick entry and import
 
-### 6.4 Dashboard
-- FR-12: Shows: total sales (today, this month), total outstanding dues, count of customers with dues.
-- FR-13: Shows a customer table: name, total sales, paid, balance, oldest unpaid date.
-- FR-14: Shows item pairs bought together, ranked by count, top 10.
+- **FR-15:** Quick entry parses lines shaped like `<customer> <qty><unit> <item> [<amount>] [pending|paid]`.
+- **FR-16:** A supported line may contain multiple item/quantity groups, producing multiple preview rows.
+- **FR-17:** `.txt` import accepts plain order lines and supported WhatsApp chat exports.
+- **FR-18:** Unparsed lines appear separately so the owner can retry or skip them.
+- **FR-19:** Parsed rows appear in an editable preview.
+- **FR-20:** Import and quick entry must not save an order until the owner chooses Confirm and save.
 
-### 6.5 Dues and Reminders
-- FR-15: Dues are grouped into buckets: 0-7 days, 8-30 days, 30+ days overdue.
-- FR-16: Each customer with a balance has a "Remind" button.
-- FR-17: The reminder message is editable before sending. Default text is polite and includes shop name, amount, and customer name.
-- FR-18: "Send on WhatsApp" opens `https://wa.me/<phone>?text=<url-encoded message>` in a new tab.
-- FR-19: The app never sends a message by itself.
+### 5.4 Dashboard and customers
 
-### 6.6 Invoice
-- FR-20: Owner selects a customer and a set of orders, then clicks "Create invoice".
-- FR-21: Invoice shows shop name (from settings), customer name, date, line items, total, and amount due.
-- FR-22: All invoice fields are editable before download.
-- FR-23: "Download PDF" produces a PDF using the browser print dialog ("Save as PDF") or a small client-side library.
+- **FR-21:** The Home tab shows sales today, sales this month, total outstanding dues, and the number of customers with dues.
+- **FR-22:** The Home tab ranks up to five top customers by sales and five top items by quantity.
+- **FR-23:** Item pairs bought by the same customer on the same date are ranked by occurrence.
+- **FR-24:** The Customers tab shows customer name, total sales, paid amount, balance due, and oldest unpaid date.
+- **FR-25:** When there are no orders, Home shows an empty state that links to Add orders.
 
-### 6.7 Export
-- FR-24: "Export CSV" downloads all orders as a UTF-8 CSV with a header row.
-- FR-25: CSV opens in Excel without manual column fixes.
+### 5.5 Dues, payments, and reminders
+
+- **FR-26:** Outstanding balances are grouped by the oldest applicable date into `0-7 days`, `8-30 days`, and `30+ days overdue` buckets.
+- **FR-27:** A payment may be full or partial and cannot exceed the outstanding balance.
+- **FR-28:** Customer-level payments are allocated to the oldest unpaid orders first.
+- **FR-29:** Each customer with a balance has a Remind action.
+- **FR-30:** The reminder text and phone number are editable before the link is opened.
+- **FR-31:** The app opens `https://wa.me/<phone>?text=<encoded-message>` in a new tab.
+- **FR-32:** Auto Khata never sends a WhatsApp message automatically.
+
+### 5.6 Invoice
+
+- **FR-33:** The owner selects a customer and one or more of that customer's orders.
+- **FR-34:** The invoice shows shop name, customer, date, line items, total, paid, and amount due.
+- **FR-35:** Invoice fields are editable without changing saved orders or settings.
+- **FR-36:** Download PDF opens the browser print dialog, where the owner can choose Save as PDF.
+- **FR-37:** Print styling hides navigation, controls, developer tools, and all non-invoice content.
+
+### 5.7 Export, backup, and settings
+
+- **FR-38:** Orders and customers can be downloaded as UTF-8 CSV files with header rows.
+- **FR-39:** CSV output must open cleanly in Excel.
+- **FR-40:** A JSON backup contains orders, customers, and non-sensitive application settings used by the frontend.
+- **FR-41:** Restore validates the selected JSON before replacing server-backed data.
+- **FR-42:** Restoring a browser-era backup does not replace the server password hash or session secret.
+- **FR-43:** The shop name can be read and updated through server settings.
+
+## 6. API Requirements
+
+| Method and path | Purpose | Access |
+|---|---|---|
+| `GET /` | Serve the application | Public |
+| `GET /api/status` | Report password/session state | Public |
+| `POST /api/password/set` | Set first password | Public only before a password exists |
+| `POST /api/login` | Validate password and unlock session | Public |
+| `POST /api/lock` | Clear session | Unlocked session |
+| `GET /api/orders` | List orders | Unlocked session |
+| `POST /api/orders` | Add or replace validated orders | Unlocked session |
+| `POST /api/payments` | Apply a payment to one order | Unlocked session |
+| `GET /api/customers` | Return customer details and aggregates | Unlocked session |
+| `POST /api/customers` | Replace validated customer records | Unlocked session |
+| `GET /api/settings` | Return safe frontend settings | Unlocked session |
+| `POST /api/settings` | Update shop name | Unlocked session |
 
 ## 7. Non-Functional Requirements
 
-- **Simplicity:** No build step. Plain HTML, CSS, and JavaScript in a small set of files.
-- **Performance:** Dashboard loads in under 1 second with 1,000 orders.
-- **Offline:** Works without internet after the first load, except the reminder link and any external library.
-- **Privacy:** No data leaves the device. No analytics or third-party tracking.
-- **Accessibility:** Readable font size (16px minimum), high contrast, large buttons.
-- **Browser support:** Latest Chrome and Edge on Windows.
+- **Local operation:** Core ledger functionality works without internet. WhatsApp requires internet when its link is opened.
+- **Privacy:** No analytics, tracking, CDN, or automatic external data transfer.
+- **Accessibility:** Minimum 16px base text, high contrast, large controls, keyboard-compatible forms, and labelled inputs.
+- **Compatibility:** Latest Chrome and Edge on Windows.
+- **Simplicity:** No frontend build step and no JavaScript framework.
+- **Durability:** Server data survives browser refresh and server restart.
+- **Capacity:** Designed for a single owner and a small local ledger, not concurrent multi-user writes.
 
-## 8. Security Note
+## 8. Security Model
 
-A password stored in the browser is a lock against casual access on a shared PC. It is not strong encryption. Anyone with access to the browser's developer tools or the stored data can bypass it. This must be stated clearly in the README and pitch. A future version can add encryption of stored data with the password as the key.
+The password is a casual lock for a shared PC, not encryption. The signed Flask session controls access through the UI/API, but orders and customers remain readable as plaintext CSV files to anyone with filesystem access. The server must remain bound to `127.0.0.1` until authentication, CSRF protection, transport security, and deployment hardening are designed for network use.
 
-## 9. Success Metrics (for hackathon demo)
+## 9. Acceptance Criteria
 
-- Parser accuracy on a labeled test set of 40 lines: target at least 85% correct for customer, item, quantity, and amount.
-- Time to record one order by quick entry: under 10 seconds.
-- Demo flow completes in 2 minutes: set password, enter orders, see dues, click Remind, download invoice.
+1. `python app.py` prints the local URL and starts on `127.0.0.1:5000`.
+2. First run shows password creation; fewer than 6 characters is rejected.
+3. Wrong login is rejected and correct login opens Home.
+4. Locked data API calls return HTTP 401.
+5. Confirmed quick-entry/import rows appear in `data/orders.csv` with the exact header.
+6. Shop name, customers, orders, and password configuration survive restart.
+7. Payments update paid amount and status without exceeding balance.
+8. CSV exports contain headers and open in Excel.
+9. Invoice print preview contains only the printable invoice.
+10. No plain password is stored in project files.
 
-## 10. Risks and Mitigations
+## 10. Known Limitations and Planned Work
 
-| Risk | Mitigation |
-|------|-----------|
-| Parser fails on messy Hinglish | Unparsed lines shown for manual fix. Test set reports accuracy honestly. |
-| Browser data lost (cleared cache) | Export and Import backup buttons. Remind owner to export weekly. |
-| Password seen as weak | State clearly it is a casual lock. Roadmap includes encryption. |
-| PDF formatting varies | Use print-to-PDF with a print stylesheet. Test on one browser. |
-| WhatsApp number missing country code | Validate phone field and prefill 91 for Indian numbers. |
+- The old root frontend remains as a temporary browser-only compatibility copy; Flask serves `templates/` and `static/`.
+- Old browser `localStorage` is not migrated automatically.
+- The frontend currently uses an in-memory cache and often saves complete order/customer arrays.
+- Some frontend save handlers update the UI before the asynchronous server write completes.
+- The payment UI should be consolidated around `/api/payments` instead of also using full-array order replacement.
+- Formal pytest and browser automation suites are not yet committed.
+- Documentation and code should be reviewed again before deleting the legacy root frontend.
 
-## 11. Milestones (3-4 hour build)
+## 11. Success Measures
 
-1. **0:00-0:30** Project setup, password screen, local storage layer.
-2. **0:30-1:30** Quick entry parser and order list.
-3. **1:30-2:15** Dashboard analytics, customer table, item pairs.
-4. **2:15-2:45** Dues buckets, reminder message, wa.me link.
-5. **2:45-3:15** Invoice editor and PDF download.
-6. **3:15-3:45** CSV export, txt import, parser accuracy test.
-7. **3:45-4:00** README polish, demo rehearsal.
-
-## 12. Open Questions
-
-- Shop name and default reminder language: fixed setting or per-customer?
-- Should the reminder default to Hindi, English, or Hinglish?
-- Does the owner want partial payments logged as separate entries or as a running balance?
+- Parser test set remains at or above 85% accuracy for customer, item, quantity, and amount.
+- A normal order can be entered and confirmed in under 10 seconds.
+- The core demonstration—login, add order, view dues, prepare reminder, create invoice—can be completed in under 2 minutes.

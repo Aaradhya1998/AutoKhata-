@@ -1,33 +1,43 @@
 # Auto Khata
 
-A lite, password-protected khata (credit ledger) for small shops. I built it to record orders by typing, see who owes what and for how long, send a WhatsApp reminder, and make an invoice as PDF.
+Auto Khata is a local credit ledger for small shops. It records orders from shorthand text or chat exports, tracks customer balances, prepares WhatsApp reminders, and creates editable invoices.
 
-It runs on the owner's PC through a local Flask server at `127.0.0.1`. The interface remains plain HTML, CSS and JavaScript; Flask and pandas store the ledger in local CSV files.
-**Built during the 6-hour Promptwars x Hack2Skill x KickToTech hackathon (Google for Developers, JSPM University).**
-## What works now
+The current application runs through a Flask server on the owner's Windows PC. Flask listens only at `http://127.0.0.1:5000`, and pandas stores orders and customers in local CSV files. The frontend remains plain HTML, CSS, and JavaScript.
 
-- Password lock. I set a password on first launch, and the app asks for it on every open. A Lock button returns to the password screen.
-- Quick entry. I type an order line, check it in an editable preview, and save only after I confirm.
-- Orders list with date, customer, item, quantity, amount, paid, status and due date.
-- Dashboard with sales today, sales this month, total dues, customers with dues, top customers, top items, and items bought together.
-- Customers table with total sales, paid, balance and oldest unpaid date.
-- Dues grouped by age: 0-7, 8-30 and 31+ days.
-- Pay button to record a full or partial payment. Payments go to the oldest unpaid orders first.
-- Remind button that opens WhatsApp with a ready message. I can edit the message and the phone number first.
-- Settings with the shop name.
-- Editable invoice. I pick a customer and orders, edit any field, and download a PDF.
+Built during the 6-hour Promptwars x Hack2Skill x KickToTech hackathon (Google for Developers, JSPM University).
 
-## Not built yet
+## Current Features
 
-- `.txt` and WhatsApp chat import
-- CSV export for Excel
-- Backup and restore
-- A list of customers whose payment is due soon (only overdue age is shown)
-- A delete button for orders
+- First-run password setup, login, and manual Lock button.
+- Quick-entry shorthand parser with an editable preview before saving.
+- Plain `.txt` and WhatsApp chat-export import.
+- Separate retry/skip handling for unparsed lines.
+- Orders list with dates, quantities, amounts, payments, status, and due dates.
+- Dashboard totals for today/month sales, dues, and customers with dues.
+- Top customers, top items, and items bought together.
+- Customer table with sales, paid amount, balance, and oldest unpaid date.
+- Dues grouped into 0-7, 8-30, and 30+ day buckets.
+- Full and partial payment recording, allocated oldest debt first in the customer payment UI.
+- Editable WhatsApp reminder and phone number before opening `wa.me`.
+- Editable invoice with browser print-to-PDF.
+- Orders and customers CSV export.
+- JSON backup download and restore.
+- Persistent shop-name setting.
+- Six-tab interface: Home, Add orders, Dues, Customers, Invoice, and Settings.
+
+## Technology
+
+- Python 3.10+
+- Flask
+- pandas
+- HTML5, CSS, and vanilla JavaScript
+- CSV and JSON files; no database
+- Browser print dialog for PDF output
+- No npm, frontend framework, CDN, or build step
 
 ## Quick Start
 
-On Windows PowerShell:
+From Windows PowerShell in the project directory:
 
 ```powershell
 python -m venv .venv
@@ -36,7 +46,7 @@ python -m pip install -r requirements.txt
 python app.py
 ```
 
-If PowerShell blocks activation, the same setup can be run without activating:
+If PowerShell does not allow activation:
 
 ```powershell
 python -m venv .venv
@@ -44,21 +54,34 @@ python -m venv .venv
 .\.venv\Scripts\python.exe app.py
 ```
 
-Open `http://127.0.0.1:5000` in Chrome or Edge, set a password of at least six characters on first run, and keep the terminal window open while using the app. The server binds only to this PC.
+The terminal prints:
 
-The previous double-click version remains in the root files during migration. Browser `localStorage` data is not migrated automatically; export a backup from the old app first if it contains data you want to keep.
+```text
+Auto Khata is running at http://127.0.0.1:5000
+```
 
-Works offline. The only outside link is the WhatsApp link, which opens when I click a button.
+Open that address in Chrome or Edge and leave the terminal running. Do not open the root `index.html` for normal server-backed use.
+
+The server intentionally binds to `127.0.0.1`, so other devices cannot connect to it.
+
+## First Run
+
+1. Start `app.py`.
+2. Open `http://127.0.0.1:5000`.
+3. Create a password containing at least 6 characters.
+4. The dashboard opens after the server stores a random salt and scrypt hash.
+
+The plain password is never written to disk. There is no password reset flow, so keep the password and a backup of the `data` folder.
 
 ## Quick Entry Format
 
-```
+```text
 <customer> <quantity><unit> <item> [amount] [pending|paid]
 ```
 
 Examples:
 
-```
+```text
 Ravi 2kg aata 120 pending
 Sunita 500g chini 40 paid
 Mohan 1 dozen anda 60 pending
@@ -67,102 +90,181 @@ Sunita 2kg aata 90 1kg chini 45 pending
 
 Rules:
 
-- One line can hold several items. Each item becomes its own order row.
-- A line with no status word is saved as unpaid. Status words: pending, unpaid, udhaar, baki, baaki (unpaid) and paid, cash (paid).
-- A missing amount becomes 0. I can fix it in the preview.
-- Known units: kg, g, gm, l, ltr, litre, ml, dozen, dz, pkt, packet, pc, pcs, piece.
-- A line the parser cannot read is shown separately so I can fix it or skip it. Nothing is saved until I click Confirm and save.
+- One line can contain multiple items. Each item becomes an order row.
+- If no status is present, the order defaults to unpaid.
+- Unpaid words include `pending`, `unpaid`, `udhaar`, `baki`, and `baaki`.
+- Paid words include `paid` and `cash`.
+- A missing amount becomes 0 and can be corrected in the preview.
+- Supported units include kg, g, gm, l, ltr, litre, ml, dozen, dz, pkt, packet, pc, pcs, and piece.
+- Nothing is persisted until Confirm and save is selected.
+
+## Text and WhatsApp Import
+
+In Add orders, choose a `.txt` file containing either plain order lines or a WhatsApp chat export. For a chat export, the optional “My name in the chat” field can exclude the owner's own messages.
+
+Recognized messages are passed through the same order parser. Parsed orders enter the editable preview; failed lines appear separately for retry or skip. Selecting a file never saves orders by itself.
 
 ## Dues and Payments
 
-- An order's age counts from its due date if one is set, otherwise from its order date.
-- A customer goes into the bucket of their oldest unpaid order.
-- A payment cannot be more than the customer's balance, and cannot be 0 or empty.
+- Debt age uses `due_date` when present and otherwise uses the order date.
+- A customer appears in the bucket of their oldest outstanding order.
+- A payment must be greater than 0 and cannot exceed the balance.
+- Full payment changes an order to `paid`; a smaller payment changes it to `partial`.
 
 ## Reminders
 
-Click Remind next to a customer. The app opens WhatsApp with a ready message, in Hinglish by default. I can edit the message before sending. I tap Send myself. The app never sends a message on its own. This is deliberate, to stay within WhatsApp's terms.
+Select Remind next to a customer with a balance. The message and phone number can be edited before Auto Khata opens WhatsApp.
 
-A 10-digit Indian mobile number gets 91 added automatically. The number is saved with the customer.
+A 10-digit Indian number receives the `91` country code automatically. Auto Khata does not send messages itself; the owner reviews and sends the message in WhatsApp.
 
 ## Invoice
 
-1. In the Invoice section, choose a customer and tick the orders to include.
-2. Click Create invoice. Shop name, customer, date, lines, paid and amount due are all editable.
-3. Click Download PDF, and in the print dialog choose "Save as PDF".
+1. Open Invoice and choose a customer.
+2. Select one or more orders.
+3. Select Create invoice.
+4. Edit the shop name, customer, date, lines, paid amount, or totals if necessary.
+5. Select Download PDF and choose Save as PDF in the browser print dialog.
 
-Editing an invoice does not change the saved orders or settings. It only changes that one bill.
+Invoice edits do not alter saved orders or settings.
 
-## Security Note
+## Server Data
 
-The password is a casual lock for a shared PC. It is not encryption. The server stores a salted scrypt hash, never the plain password, but anyone with access to the PC can still read the CSV files. Do not rely on it for highly sensitive information.
+Runtime data is stored in:
 
-There is no password recovery flow. Keep a backup of the `data` folder.
+```text
+data/orders.csv
+data/customers.csv
+data/settings.json
+```
 
-## Backup
+Orders use this exact header:
 
-Orders and customers live in the local `data` folder. The Settings tab can also download and restore application backups.
+```text
+id,date,customer,item,quantity,unit,amount,paid,due_date,status
+```
+
+Customers use:
+
+```text
+name,phone
+```
+
+`settings.json` stores the shop name, default language, password salt/hash, and generated Flask session secret. CSV and JSON changes are written to temporary files and committed with an atomic replacement.
+
+## Export and Backup
+
+The Settings tab can:
+
+- Export orders CSV.
+- Export customers CSV.
+- Download a JSON application backup.
+- Restore a compatible JSON backup.
+
+The server's password hash and session secret are not replaced by a frontend backup restore. For a complete machine-level backup, stop the server and copy the entire `data` folder.
+
+## Legacy Browser Version
+
+The root `index.html`, `style.css`, and `app.js` are the previous browser-only version and remain temporarily for migration safety. They use browser `localStorage` and are not the frontend served by Flask.
+
+The server uses:
+
+```text
+templates/index.html
+static/style.css
+static/app.js
+```
+
+Existing browser `localStorage` records are not migrated automatically. Export a backup from the old version before removing it. Importing or validating old backup data should be done deliberately.
+
+## Security Model
+
+The password is a casual lock for a shared PC. It is not encryption. Flask stores a salted scrypt hash rather than the plain password, and protected API routes require an unlocked signed session.
+
+Anyone with filesystem access can still read `orders.csv`, `customers.csv`, and most settings. Do not expose the current server to a network or use it for highly sensitive information.
+
+A page refresh may remain unlocked while the current Flask session cookie is valid. Selecting Lock clears the session.
+
+## Project Structure
+
+```text
+auto-khata/
+|-- app.py                 # Flask routes, password and session handling
+|-- data.py                # pandas CSV/JSON persistence
+|-- requirements.txt       # Flask and pandas
+|-- templates/
+|   `-- index.html         # Flask-served application shell
+|-- static/
+|   |-- style.css          # Screen and invoice print styles
+|   `-- app.js             # Parser, UI modules, and API-backed Store
+|-- data/
+|   |-- orders.csv
+|   |-- customers.csv
+|   `-- settings.json
+|-- tests/
+|   |-- parser_test.txt
+|   `-- chat_sample.txt
+|-- PRD.md
+|-- DFD.md
+|-- README.md
+|-- index.html             # Legacy browser-only copy
+|-- style.css              # Legacy browser-only copy
+`-- app.js                 # Legacy localStorage copy
+```
+
+## API Summary
+
+Public routes:
+
+- `GET /`
+- `GET /api/status`
+- `POST /api/password/set`
+- `POST /api/login`
+
+Routes requiring an unlocked session:
+
+- `POST /api/lock`
+- `GET`, `POST /api/orders`
+- `POST /api/payments`
+- `GET`, `POST /api/customers`
+- `GET`, `POST /api/settings`
 
 ## Parser Accuracy
 
-I tested the parser on 40 sample lines in `tests/parser_test.txt`: 35 labeled with correct values and 5 that should be rejected. The test lines were written by me, so these numbers are probably higher than what real shop messages would score.
+The hand-run parser fixture contains 40 lines in `tests/parser_test.txt`: 35 expected successes and 5 expected rejections.
 
 | Field | Correct | Accuracy |
-|-------|---------|----------|
+|---|---:|---:|
 | Customer | 34 / 35 | 97.1% |
 | Item | 33 / 35 | 94.3% |
 | Quantity | 35 / 35 | 100% |
 | Unit | 35 / 35 | 100% |
 | Amount | 35 / 35 | 100% |
 
-- Lines that should be rejected and were rejected: 5 / 5.
-- Lines where every field was correct: 33 / 35.
+All 5 intentionally invalid lines were rejected, and 33 of 35 valid lines had every labelled field correct. These are authored fixtures, not results from a production shop dataset.
 
-The two misses:
+## Current Limitations
 
-- `Ravi 2kg aata Rs 120 pending`: the parser read the item as "aata rs".
-- `Ravi ko 2kg aata dena 120 pending`: the parser read the customer as "Ravi Ko" and the item as "aata dena".
+- Single PC and single owner; no synchronization or concurrent-user design.
+- No automatic WhatsApp sending or WhatsApp scraping.
+- No GST, payment gateway, inventory, or order deletion UI.
+- No due-soon view separate from the existing age buckets.
+- Ledger CSV files are not encrypted.
+- The frontend cache often sends complete order/customer arrays when saving.
+- Some UI save handlers update the screen before the asynchronous request finishes.
+- `/api/payments` exists, but customer payment handling should be fully consolidated around it.
+- No committed pytest or browser automation suite yet.
+- Parser behavior is shorthand-oriented; complex Hindi sentences, currency notation, and comma-formatted amounts may require manual correction.
 
-I have not yet tested on real messages from a shop.
+## Recommended Next Work
 
-## Limits
+1. Add pytest coverage for authentication, locked routes, CSV persistence, payments, and restart behavior.
+2. Await server writes before displaying success in the frontend.
+3. Route all payment updates through `/api/payments`.
+4. Add a reviewed migration tool for legacy browser backups.
+5. Add friendly recovery messages for malformed CSV/JSON files.
+6. Remove the legacy root frontend only after migration approval.
 
-- Single device. No sync between PC and phone.
-- No automatic WhatsApp sending. No WhatsApp scraping.
-- No GST, no payments gateway, no inventory counts.
-- The parser handles common shorthand. Hindi sentences, "Rs" or "₹" signs, and amounts like 1,200 are not supported.
-- Items are matched by exact spelling. "aata" and "atta" count as different items in the dashboard.
-- "Bought together" means the same customer bought both items on the same date. There are no bill numbers.
-- Tested on Chrome and Edge on Windows only.
+## Documentation
 
-## Project Structure
-
-```
-auto-khata/
-├── index.html      # App shell and screens
-├── style.css       # Layout and print styles for the invoice
-├── app.js          # Storage, password, parser, dashboard, dues, reminders, invoice
-├── tests/
-│   └── parser_test.txt   # 40 labeled sample lines
-├── PRD.md
-├── DFD.md
-└── README.md
-```
-
-Server data is stored in `data/orders.csv`, `data/customers.csv`, and `data/settings.json`. The CSV files are replaced atomically after pandas writes them.
-
-To run the parser test, unlock the app, open Developer tools at the bottom of the page, and choose `tests/parser_test.txt`.
-
-## Roadmap
-
-- `.txt` and WhatsApp chat import with an editable preview
-- CSV export that opens in Excel, plus backup and restore
-- Due-soon list
-- Delete and edit for saved orders
-- Encrypted storage using the password as the key
-- Phone access over the local network
-- Hindi and English reminder templates
-
-## Tech Stack
-
-HTML, CSS and vanilla JavaScript with a local Flask and pandas backend. There is no build step or database. PDF is made through the browser's print dialog.
+- `PRD.md` defines the current product requirements and acceptance criteria.
+- `DFD.md` documents browser, API, storage, and external data flows.
