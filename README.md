@@ -3,7 +3,7 @@
 A lite, password-protected khata (credit ledger) for small shops. I built it to record orders by typing, see who owes what and for how long, send a WhatsApp reminder, and make an invoice as PDF.
 
 It runs in the browser on a PC. No server, no installation, no database. It is plain HTML, CSS and JavaScript.
-
+**Built during the 6-hour Promptwars x Hack2Skill x KickToTech hackathon (Google for Developers, JSPM University).**
 ## What works now
 
 - Password lock. I set a password on first launch, and the app asks for it on every open. A Lock button returns to the password screen.
