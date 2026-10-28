@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Auto Khata</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <section id="lock-screen" aria-labelledby="lock-title">
+    <div class="lock-card">
+      <h1 id="lock-title">Auto Khata</h1>
+
+      <form id="lock-form" novalidate>
+        <label id="password-label" for="password">Enter password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+
+        <div id="confirm-group" class="hidden">
+          <label for="confirm-password">Confirm password</label>
+          <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password">
+        </div>
+
+        <button id="submit-password" type="submit">Continue</button>
+        <p id="lock-error" class="error-message" role="alert" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+
+  <section id="app" class="hidden">
+    <header>
+      <h1>Auto Khata</h1>
+      <button id="lock-button" type="button">Lock</button>
+    </header>
+    <main id="main">Unlocked. Features coming in next steps.</main>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
