@@ -670,6 +670,7 @@ function confirmAndSavePreview() {
   renderPreview();
   renderOrders();
   renderDashboard();
+  renderDues();
 }
 
 function cancelPreview() {
@@ -981,6 +982,415 @@ function clearDashboardForLock() {
   pairsList.replaceChildren();
 }
 
+/* ===== DUES ===== */
+
+function daysBetween(fromStr, toStr) {
+  const [fromYear, fromMonth, fromDay] = fromStr.split("-").map(Number);
+  const [toYear, toMonth, toDay] = toStr.split("-").map(Number);
+  const from = Date.UTC(fromYear, fromMonth - 1, fromDay);
+  const to = Date.UTC(toYear, toMonth - 1, toDay);
+  return Math.round((to - from) / 86400000);
+}
+
+function orderAgeDays(order, today) {
+  const start = order.due_date ? order.due_date : order.date;
+  return Math.max(0, daysBetween(start, today));
+}
+
+function bucketFor(days) {
+  if (days <= 7) {
+    return "0-7";
+  }
+
+  if (days <= 30) {
+    return "8-30";
+  }
+
+  return "31+";
+}
+
+function computeDues(orders, today) {
+  const groups = new Map();
+
+  for (const order of orders) {
+    const balance = orderMoney(order.amount) - orderMoney(order.paid);
+
+    if (balance <= 0) {
+      continue;
+    }
+
+    const key = customerGroupKey(order.customer);
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        name: String(order.customer).trim().replace(/\s+/g, " "),
+        balance: 0,
+        ageDays: 0,
+        oldestUnpaid: ""
+      });
+    }
+
+    const customer = groups.get(key);
+    customer.balance += balance;
+    customer.ageDays = Math.max(customer.ageDays, orderAgeDays(order, today));
+
+    if (!customer.oldestUnpaid || order.date < customer.oldestUnpaid) {
+      customer.oldestUnpaid = order.date;
+    }
+  }
+
+  const buckets = { "0-7": [], "8-30": [], "31+": [] };
+
+  for (const customer of groups.values()) {
+    const entry = {
+      name: customer.name,
+      balance: roundMoney(customer.balance),
+      ageDays: customer.ageDays,
+      oldestUnpaid: customer.oldestUnpaid
+    };
+    buckets[bucketFor(entry.ageDays)].push(entry);
+  }
+
+  for (const entries of Object.values(buckets)) {
+    entries.sort((a, b) =>
+      b.balance - a.balance || a.name.localeCompare(b.name)
+    );
+  }
+
+  return buckets;
+}
+
+function applyPayment(orders, customerName, amount, today) {
+  if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) {
+    return { ok: false, reason: "enter an amount above 0" };
+  }
+
+  const customerKey = customerGroupKey(customerName);
+  const copiedOrders = orders.map((order) => ({ ...order }));
+  const unpaidIndexes = [];
+  let totalBalance = 0;
+
+  copiedOrders.forEach((order, index) => {
+    if (customerGroupKey(order.customer) !== customerKey) {
+      return;
+    }
+
+    const balance = orderMoney(order.amount) - orderMoney(order.paid);
+
+    if (balance > 0) {
+      totalBalance += balance;
+      unpaidIndexes.push(index);
+    }
+  });
+
+  totalBalance = roundMoney(totalBalance);
+
+  if (amount > totalBalance) {
+    return { ok: false, reason: "more than balance due" };
+  }
+
+  unpaidIndexes.sort((first, second) => {
+    const dateOrder = String(copiedOrders[first].date)
+      .localeCompare(String(copiedOrders[second].date));
+    return dateOrder || first - second;
+  });
+
+  let remaining = amount;
+
+  for (const index of unpaidIndexes) {
+    if (remaining <= 0) {
+      break;
+    }
+
+    const order = copiedOrders[index];
+    const orderAmount = orderMoney(order.amount);
+    const currentPaid = orderMoney(order.paid);
+    const balance = orderAmount - currentPaid;
+    const applied = Math.min(balance, remaining);
+    order.paid = roundMoney(currentPaid + applied);
+    remaining = roundMoney(remaining - applied);
+
+    if (order.paid >= orderAmount) {
+      order.status = "paid";
+    } else if (order.paid > 0) {
+      order.status = "partial";
+    } else {
+      order.status = "unpaid";
+    }
+  }
+
+  return { ok: true, orders: copiedOrders };
+}
+
+function normalizePhone(input) {
+  const digits = String(input).replace(/\D/g, "");
+
+  if (digits.length === 10) {
+    return `91${digits}`;
+  }
+
+  if (digits.length === 12 && digits.startsWith("91")) {
+    return digits;
+  }
+
+  return "";
+}
+
+function buildReminderMessage(name, balance, shopName) {
+  const shop = String(shopName).trim() || "hamari dukaan";
+  return `Namaste ${name} ji, ${shop} se yaad dila rahe hain ki aapka ${formatMoney(balance)} baaki hai. Kripya jaldi bhugtan kar dein. Dhanyavaad.`;
+}
+
+function buildWaUrl(phone, message) {
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+}
+
+function closeActionPanel() {
+  actionPanel.replaceChildren();
+  actionPanel.classList.add("hidden");
+}
+
+function appendActionCloseButton() {
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.textContent = "Close";
+  closeButton.addEventListener("click", closeActionPanel);
+  actionPanel.appendChild(closeButton);
+}
+
+function openReminderPanel(customer) {
+  actionPanel.replaceChildren();
+  actionPanel.classList.remove("hidden");
+
+  const heading = document.createElement("h3");
+  heading.textContent = `Remind ${customer.name}`;
+
+  const phoneLabel = document.createElement("label");
+  phoneLabel.htmlFor = "reminder-phone";
+  phoneLabel.textContent = "Phone";
+
+  const phoneInput = document.createElement("input");
+  phoneInput.id = "reminder-phone";
+  phoneInput.type = "tel";
+  const loadedCustomers = Store.load("customers");
+  const customers = Array.isArray(loadedCustomers) ? loadedCustomers : [];
+  const matchingCustomer = customers.find((entry) =>
+    customerGroupKey(entry.name) === customerGroupKey(customer.name)
+  );
+  phoneInput.value = matchingCustomer ? matchingCustomer.phone : "";
+
+  const messageLabel = document.createElement("label");
+  messageLabel.htmlFor = "reminder-message";
+  messageLabel.textContent = "Message";
+
+  const messageInput = document.createElement("textarea");
+  messageInput.id = "reminder-message";
+  const settings = Store.load("settings");
+  messageInput.value = buildReminderMessage(customer.name, customer.balance, settings.shop_name);
+
+  const error = document.createElement("p");
+  error.className = "action-error";
+  error.setAttribute("role", "alert");
+
+  const sendButton = document.createElement("button");
+  sendButton.type = "button";
+  sendButton.textContent = "Send on WhatsApp";
+  sendButton.addEventListener("click", () => {
+    const phone = normalizePhone(phoneInput.value);
+
+    if (!phone) {
+      error.textContent = "Enter a 10-digit mobile number or a number starting with 91";
+      return;
+    }
+
+    if (!messageInput.value.trim()) {
+      error.textContent = "Enter a message";
+      return;
+    }
+
+    const currentCustomers = Store.load("customers");
+    const updatedCustomers = Array.isArray(currentCustomers) ? currentCustomers : [];
+    let savedCustomer = updatedCustomers.find((entry) =>
+      customerGroupKey(entry.name) === customerGroupKey(customer.name)
+    );
+
+    if (!savedCustomer) {
+      savedCustomer = { name: customer.name, phone: "" };
+      updatedCustomers.push(savedCustomer);
+    }
+
+    savedCustomer.phone = phone;
+    Store.save("customers", updatedCustomers);
+    window.open(buildWaUrl(phone, messageInput.value), "_blank", "noopener");
+  });
+
+  actionPanel.append(
+    heading,
+    phoneLabel,
+    phoneInput,
+    messageLabel,
+    messageInput,
+    error,
+    sendButton
+  );
+  appendActionCloseButton();
+}
+
+function openPaymentPanel(customer) {
+  actionPanel.replaceChildren();
+  actionPanel.classList.remove("hidden");
+
+  const heading = document.createElement("h3");
+  heading.textContent = `Record payment for ${customer.name}`;
+
+  const balance = document.createElement("p");
+  balance.textContent = `Balance due: ${formatMoney(customer.balance)}`;
+
+  const amountLabel = document.createElement("label");
+  amountLabel.htmlFor = "payment-amount";
+  amountLabel.textContent = "Payment amount";
+
+  const amountInput = document.createElement("input");
+  amountInput.id = "payment-amount";
+  amountInput.type = "number";
+  amountInput.step = "any";
+  amountInput.min = "0";
+
+  const error = document.createElement("p");
+  error.className = "action-error";
+  error.setAttribute("role", "alert");
+
+  const saveButton = document.createElement("button");
+  saveButton.type = "button";
+  saveButton.textContent = "Save payment";
+  saveButton.addEventListener("click", () => {
+    const amount = amountInput.value === "" ? NaN : Number(amountInput.value);
+    const loadedOrders = Store.load("orders");
+    const orders = Array.isArray(loadedOrders) ? loadedOrders : [];
+    const result = applyPayment(orders, customer.name, amount, todayLocal());
+
+    if (!result.ok) {
+      error.textContent = result.reason;
+      return;
+    }
+
+    Store.save("orders", result.orders);
+    closeActionPanel();
+    renderDues();
+    renderDashboard();
+    renderOrders();
+  });
+
+  actionPanel.append(heading, balance, amountLabel, amountInput, error, saveButton);
+  appendActionCloseButton();
+}
+
+function appendDuesHeader(table) {
+  const head = document.createElement("thead");
+  const row = document.createElement("tr");
+
+  for (const label of ["Customer", "Balance due", "Oldest unpaid date", "Age (days)"]) {
+    const cell = document.createElement("th");
+    cell.textContent = label;
+    row.appendChild(cell);
+  }
+
+  const actions = document.createElement("th");
+  actions.colSpan = 2;
+  actions.textContent = "Actions";
+  row.appendChild(actions);
+  head.appendChild(row);
+  table.appendChild(head);
+}
+
+function renderDues() {
+  const loadedOrders = Store.load("orders");
+  const orders = Array.isArray(loadedOrders) ? loadedOrders : [];
+  const buckets = computeDues(orders, todayLocal());
+  const bucketTitles = [
+    { key: "0-7", title: "0-7 days" },
+    { key: "8-30", title: "8-30 days" },
+    { key: "31+", title: "31+ days" }
+  ];
+
+  duesBuckets.replaceChildren();
+
+  for (const bucket of bucketTitles) {
+    const block = document.createElement("div");
+    block.className = "dues-bucket";
+
+    const heading = document.createElement("h3");
+    heading.textContent = bucket.title;
+
+    const count = document.createElement("p");
+    count.textContent = `${buckets[bucket.key].length} customers`;
+
+    const table = document.createElement("table");
+    appendDuesHeader(table);
+    const body = document.createElement("tbody");
+
+    if (buckets[bucket.key].length === 0) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 6;
+      cell.textContent = "None";
+      row.appendChild(cell);
+      body.appendChild(row);
+    } else {
+      for (const customer of buckets[bucket.key]) {
+        const row = document.createElement("tr");
+        appendDashboardCell(row, customer.name);
+        appendDashboardCell(row, formatMoney(customer.balance), "amount-due");
+        appendDashboardCell(row, customer.oldestUnpaid);
+        appendDashboardCell(row, customer.ageDays);
+
+        const remindCell = document.createElement("td");
+        const remindButton = document.createElement("button");
+        remindButton.type = "button";
+        remindButton.textContent = "Remind";
+        remindButton.addEventListener("click", () => openReminderPanel(customer));
+        remindCell.appendChild(remindButton);
+        row.appendChild(remindCell);
+
+        const payCell = document.createElement("td");
+        const payButton = document.createElement("button");
+        payButton.type = "button";
+        payButton.textContent = "Pay";
+        payButton.addEventListener("click", () => openPaymentPanel(customer));
+        payCell.appendChild(payButton);
+        row.appendChild(payCell);
+
+        body.appendChild(row);
+      }
+    }
+
+    table.appendChild(body);
+    block.append(heading, count, table);
+    duesBuckets.appendChild(block);
+  }
+}
+
+function loadSettingsUi() {
+  const settings = Store.load("settings");
+  shopNameInput.value = settings.shop_name;
+  shopSaved.textContent = "";
+}
+
+function saveShopName() {
+  const settings = Store.load("settings");
+  settings.shop_name = shopNameInput.value.trim();
+  Store.save("settings", settings);
+  shopNameInput.value = settings.shop_name;
+  shopSaved.textContent = "Saved";
+}
+
+function clearDuesForLock() {
+  duesBuckets.replaceChildren();
+  closeActionPanel();
+  shopNameInput.value = "";
+  shopSaved.textContent = "";
+}
+
 /* ===== UI WIRING ===== */
 
 const lockScreen = document.getElementById("lock-screen");
@@ -1011,6 +1421,11 @@ const topItemsList = document.getElementById("top-items");
 const customersBody = document.getElementById("customers-body");
 const pairsNote = document.getElementById("pairs-note");
 const pairsList = document.getElementById("pairs-list");
+const shopNameInput = document.getElementById("shop-name");
+const shopSave = document.getElementById("shop-save");
+const shopSaved = document.getElementById("shop-saved");
+const duesBuckets = document.getElementById("dues-buckets");
+const actionPanel = document.getElementById("action-panel");
 
 let unlocked = false;
 const cryptoAvailable = Boolean(window.crypto && window.crypto.subtle);
@@ -1052,6 +1467,8 @@ function unlock() {
   showError("");
   renderOrders();
   renderDashboard();
+  loadSettingsUi();
+  renderDues();
 }
 
 lockForm.addEventListener("submit", async (event) => {
@@ -1102,10 +1519,12 @@ lockForm.addEventListener("submit", async (event) => {
 entryAdd.addEventListener("click", addEntryToPreview);
 previewConfirm.addEventListener("click", confirmAndSavePreview);
 previewCancel.addEventListener("click", cancelPreview);
+shopSave.addEventListener("click", saveShopName);
 
 lockButton.addEventListener("click", () => {
   clearOrdersUiForLock();
   clearDashboardForLock();
+  clearDuesForLock();
   showLockScreen();
 });
 
