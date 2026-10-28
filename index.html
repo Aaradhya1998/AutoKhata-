@@ -31,7 +31,15 @@
       <h1>Auto Khata</h1>
       <button id="lock-button" type="button">Lock</button>
     </header>
-    <main id="main">Unlocked. Features coming in next steps.</main>
+    <main id="main">
+      <p>Unlocked. Features coming in next steps.</p>
+      <details id="dev-tools">
+        <summary>Developer tools</summary>
+        <label for="parser-test-file">Parser test file</label>
+        <input id="parser-test-file" type="file" accept=".txt">
+        <pre id="parser-results"></pre>
+      </details>
+    </main>
   </section>
 
   <script src="app.js"></script>

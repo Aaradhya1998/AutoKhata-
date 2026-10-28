@@ -1,0 +1,45 @@
+# Auto Khata parser test set. 40 lines.
+# Format: INPUT || customer || status || item,qty,unit,amount ; item,qty,unit,amount
+# Lines ending in "|| FAIL" must be rejected by the parser.
+# Lines marked KNOWN MISS have the TRUE answer as the label. The parser is expected to get them wrong.
+# Missing amount is 0. Missing status is unpaid.
+Ravi 2kg aata 120 pending || Ravi || unpaid || aata,2,kg,120
+Sunita 500g chini 40 paid || Sunita || paid || chini,500,g,40
+Mohan 1 dozen anda 60 pending || Mohan || unpaid || anda,1,dozen,60
+Ravi 2kg aata 1 tel oil pending || Ravi || unpaid || aata,2,kg,0 ; tel oil,1,,0
+Geeta 1kg chawal 75 paid || Geeta || paid || chawal,1,kg,75
+Anil 1 litre doodh 60 pending || Anil || unpaid || doodh,1,litre,60
+Pooja 2 pkt biscuit 20 pending || Pooja || unpaid || biscuit,2,pkt,20
+Rakesh 5kg atta 250 PAID || Rakesh || paid || atta,5,kg,250
+ravi 1kg sugar 45 pending || Ravi || unpaid || sugar,1,kg,45
+Ravi Kumar 3kg aata 150 pending || Ravi Kumar || unpaid || aata,3,kg,150
+Sunita 2kg aata 90 1kg chini 45 pending || Sunita || unpaid || aata,2,kg,90 ; chini,1,kg,45
+Mohan 250g chai patti 55 paid || Mohan || paid || chai patti,250,g,55
+Deepak 1.5kg dal 180 pending || Deepak || unpaid || dal,1.5,kg,180
+Kavita 3 sabun 90 pending || Kavita || unpaid || sabun,3,,90
+Imran 1 tel oil pending || Imran || unpaid || tel oil,1,,0
+Ravi 2kg aata pending || Ravi || unpaid || aata,2,kg,0
+Sunita 500g chini || Sunita || unpaid || chini,500,g,0
+Neha 1kg namak 20 paid || Neha || paid || namak,1,kg,20
+Vijay 10 pcs maggi 140 pending || Vijay || unpaid || maggi,10,pcs,140
+Suresh 2 ltr tel 380 pending || Suresh || unpaid || tel,2,ltr,380
+Meena 1kg aata 45 2 pkt namkeen 40 paid || Meena || paid || aata,1,kg,45 ; namkeen,2,pkt,40
+Rohit 1kg aata 1kg chini 1kg dal pending || Rohit || unpaid || aata,1,kg,0 ; chini,1,kg,0 ; dal,1,kg,0
+Farah 2 dozen kela 120 pending || Farah || unpaid || kela,2,dozen,120
+Gopal 100g haldi 25 paid || Gopal || paid || haldi,100,g,25
+Lata 1 kg chawal 70 udhaar || Lata || unpaid || chawal,1,kg,70
+Ravi 2kg aata 120 baki || Ravi || unpaid || aata,2,kg,120
+Sanjay 500ml sarson tel 95 paid || Sanjay || paid || sarson tel,500,ml,95
+Tina 1 packet bread 40 pending || Tina || unpaid || bread,1,packet,40
+Harish 3kg pyaaz 90 2kg aloo 60 pending || Harish || unpaid || pyaaz,3,kg,90 ; aloo,2,kg,60
+Usha 2kg aata  120   paid || Usha || paid || aata,2,kg,120
+Dinesh 1 dz anda 55 pending || Dinesh || unpaid || anda,1,dz,55
+Bablu 5 chocolate 50 cash || Bablu || paid || chocolate,5,,50
+Priya 750g paneer 210 paid || Priya || paid || paneer,750,g,210
+aata 2kg 100 pending || FAIL
+2kg aata 100 pending || FAIL
+Ravi pending || FAIL
+Ravi 2xyz aata 50 pending || FAIL
+Ravi aaj aata liya 120 pending || FAIL
+Ravi 2kg aata Rs 120 pending || Ravi || unpaid || aata,2,kg,120
+Ravi ko 2kg aata dena 120 pending || Ravi || unpaid || aata,2,kg,120

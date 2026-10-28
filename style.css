@@ -91,3 +91,10 @@ button:disabled {
 #main {
   padding: 24px;
 }
+
+#parser-results {
+  font-family: monospace;
+  font-size: 16px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
