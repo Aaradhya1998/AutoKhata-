@@ -1,8 +1,8 @@
 # Auto Khata
 
 A lite, password-protected khata (credit ledger) for small shops. Record orders by typing or importing a chat file, see who owes what and for how long, send a WhatsApp reminder in one click, and create an editable invoice as PDF.
-
-Runs in the browser on a PC. No server, no installation, no database.
+THIS WAS BUILT DURING 6 HOUR PROMPTWARS 
+## PROMPTWARS X KICKTOTECH X HACK2SKILL X GOOGLE FOR DEVLOPERS X JSPM UNIVERSITY 
 
 ## Features
 
@@ -105,4 +105,4 @@ auto-khata/
 
 ## Tech Stack
 
-HTML, CSS, and vanilla JavaScript. Optional client-side PDF library. No backend.
+HTML, CSS, and vanilla JavaScript. Optional client-side PDF library. 
