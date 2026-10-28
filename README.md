@@ -35,6 +35,95 @@ Built during the 6-hour Promptwars x Hack2Skill x KickToTech hackathon (Google f
 - Browser print dialog for PDF output
 - No npm, frontend framework, CDN, or build step
 
+
+'''mermaid
+flowchart TD
+
+subgraph group_browser["Browser workflows"]
+  node_shell["Web app shell<br/>[index.html]"]
+  node_order_entry["Order entry<br/>[app.js]"]
+  node_text_import["Text and chat import<br/>[app.js]"]
+  node_preview["Editable preview<br/>[app.js]"]
+  node_dashboard["Sales dashboard<br/>[app.js]"]
+  node_dues["Dues and payments<br/>[app.js]"]
+  node_customers["Customer records<br/>[app.js]"]
+end
+
+subgraph group_server["Server and access"]
+  node_flask["Flask routes<br/>[app.py]"]
+  node_access["Password and session<br/>[app.py]"]
+end
+
+subgraph group_storage["Local persistence"]
+  node_datastore["DataStore<br/>[data.py]"]
+  node_order_csv[("Orders CSV<br/>[orders.csv]")]
+  node_customer_csv[("Customers CSV<br/>[customers.csv]")]
+  node_settings_json[("Settings JSON<br/>[settings.json]")]
+end
+
+subgraph group_outputs["Shop outputs"]
+  node_invoice["Invoice editor<br/>[app.js]"]
+  node_exports["Export and backup<br/>[app.js]"]
+  node_reminders["Reminder editor<br/>[app.js]"]
+end
+
+node_owner(("Shop owner"))
+node_whatsapp(("WhatsApp"))
+node_print(("Browser print dialog"))
+
+node_owner -->|"uses"| node_shell
+node_shell -->|"opens"| node_order_entry
+node_owner -->|"selects file"| node_text_import
+node_text_import -->|"parses lines"| node_preview
+node_order_entry -->|"previews orders"| node_preview
+node_preview -->|"saves orders"| node_flask
+node_flask -->|"reads and writes"| node_datastore
+node_datastore -->|"reads and writes"| node_order_csv
+node_datastore -->|"reads and writes"| node_customer_csv
+node_datastore -->|"reads and writes"| node_settings_json
+node_shell -->|"requests API"| node_flask
+node_flask -->|"checks session"| node_access
+node_owner -->|"sets password"| node_access
+node_dashboard -->|"loads ledger"| node_flask
+node_dues -->|"records payments"| node_flask
+node_customers -->|"manages contacts"| node_flask
+node_owner -->|"creates invoice"| node_invoice
+node_invoice -->|"prints to PDF"| node_print
+node_owner -->|"edits reminder"| node_reminders
+node_reminders -->|"opens message"| node_whatsapp
+node_owner -->|"exports or restores"| node_exports
+node_exports -->|"requests data"| node_flask
+
+click node_shell "https://github.com/aaradhya1998/autokhata-/blob/master/templates/index.html"
+click node_order_entry "https://github.com/aaradhya1998/autokhata-/blob/master/static/app.js"
+click node_text_import "https://github.com/aaradhya1998/autokhata-/blob/master/static/app.js"
+click node_preview "https://github.com/aaradhya1998/autokhata-/blob/master/static/app.js"
+click node_dashboard "https://github.com/aaradhya1998/autokhata-/blob/master/static/app.js"
+click node_dues "https://github.com/aaradhya1998/autokhata-/blob/master/static/app.js"
+click node_customers "https://github.com/aaradhya1998/autokhata-/blob/master/static/app.js"
+click node_invoice "https://github.com/aaradhya1998/autokhata-/blob/master/static/app.js"
+click node_exports "https://github.com/aaradhya1998/autokhata-/blob/master/static/app.js"
+click node_reminders "https://github.com/aaradhya1998/autokhata-/blob/master/static/app.js"
+click node_flask "https://github.com/aaradhya1998/autokhata-/blob/master/app.py"
+click node_access "https://github.com/aaradhya1998/autokhata-/blob/master/app.py"
+click node_datastore "https://github.com/aaradhya1998/autokhata-/blob/master/data.py"
+click node_order_csv "https://github.com/aaradhya1998/autokhata-/blob/master/data/orders.csv"
+click node_customer_csv "https://github.com/aaradhya1998/autokhata-/blob/master/data/customers.csv"
+click node_settings_json "https://github.com/aaradhya1998/autokhata-/blob/master/data/settings.json"
+
+classDef toneNeutral fill:#f8fafc,stroke:#334155,stroke-width:1.5px,color:#0f172a
+classDef toneBlue fill:#dbeafe,stroke:#2563eb,stroke-width:1.5px,color:#172554
+classDef toneAmber fill:#fef3c7,stroke:#d97706,stroke-width:1.5px,color:#78350f
+classDef toneMint fill:#dcfce7,stroke:#16a34a,stroke-width:1.5px,color:#14532d
+classDef toneRose fill:#ffe4e6,stroke:#e11d48,stroke-width:1.5px,color:#881337
+classDef toneIndigo fill:#e0e7ff,stroke:#4f46e5,stroke-width:1.5px,color:#312e81
+classDef toneTeal fill:#ccfbf1,stroke:#0f766e,stroke-width:1.5px,color:#134e4a
+class node_shell,node_order_entry,node_text_import,node_preview,node_dashboard,node_dues,node_customers,node_print toneBlue
+class node_flask,node_access toneAmber
+class node_datastore,node_order_csv,node_customer_csv,node_settings_json toneMint
+class node_invoice,node_exports,node_reminders toneRose
+class node_owner,node_whatsapp toneIndigo
+'''
 ## Quick Start
 
 From Windows PowerShell in the project directory:
