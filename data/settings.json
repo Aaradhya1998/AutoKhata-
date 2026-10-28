@@ -1,0 +1,7 @@
+{
+  "shop_name": "",
+  "password_salt": "",
+  "password_hash": "",
+  "default_language": "en",
+  "session_secret": "b816fe8e506452a6d558386b99439c73c0356f225bfb38a5084815f96fe5a1bc"
+}

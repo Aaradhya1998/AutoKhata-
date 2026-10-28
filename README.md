@@ -2,7 +2,7 @@
 
 A lite, password-protected khata (credit ledger) for small shops. I built it to record orders by typing, see who owes what and for how long, send a WhatsApp reminder, and make an invoice as PDF.
 
-It runs in the browser on a PC. No server, no installation, no database. It is plain HTML, CSS and JavaScript.
+It runs on the owner's PC through a local Flask server at `127.0.0.1`. The interface remains plain HTML, CSS and JavaScript; Flask and pandas store the ledger in local CSV files.
 **Built during the 6-hour Promptwars x Hack2Skill x KickToTech hackathon (Google for Developers, JSPM University).**
 ## What works now
 
@@ -27,11 +27,26 @@ It runs in the browser on a PC. No server, no installation, no database. It is p
 
 ## Quick Start
 
-1. Download or clone this folder.
-2. Open `index.html` in Chrome or Edge.
-3. Set a password (minimum 6 characters).
-4. In Settings, enter the shop name and click Save.
-5. Type orders in the quick entry box.
+On Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python app.py
+```
+
+If PowerShell blocks activation, the same setup can be run without activating:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe app.py
+```
+
+Open `http://127.0.0.1:5000` in Chrome or Edge, set a password of at least six characters on first run, and keep the terminal window open while using the app. The server binds only to this PC.
+
+The previous double-click version remains in the root files during migration. Browser `localStorage` data is not migrated automatically; export a backup from the old app first if it contains data you want to keep.
 
 Works offline. The only outside link is the WhatsApp link, which opens when I click a button.
 
@@ -80,13 +95,13 @@ Editing an invoice does not change the saved orders or settings. It only changes
 
 ## Security Note
 
-The password is a casual lock for a shared PC. It is not encryption. Anyone who opens the browser developer tools can read the stored data. Do not rely on it for highly sensitive information.
+The password is a casual lock for a shared PC. It is not encryption. The server stores a salted scrypt hash, never the plain password, but anyone with access to the PC can still read the CSV files. Do not rely on it for highly sensitive information.
 
-If I forget the password, the only way back in is to clear the `autokhata.settings` key in the browser's local storage. That also removes the shop name.
+There is no password recovery flow. Keep a backup of the `data` folder.
 
 ## Backup
 
-My data lives in this browser only. Clearing browser data erases the ledger. A backup feature is not built yet. For now, the data can be copied from the browser's local storage by hand.
+Orders and customers live in the local `data` folder. The Settings tab can also download and restore application backups.
 
 ## Parser Accuracy
 
@@ -134,7 +149,7 @@ auto-khata/
 └── README.md
 ```
 
-Data is stored in browser local storage under three keys: `autokhata.orders`, `autokhata.customers` and `autokhata.settings`.
+Server data is stored in `data/orders.csv`, `data/customers.csv`, and `data/settings.json`. The CSV files are replaced atomically after pandas writes them.
 
 To run the parser test, unlock the app, open Developer tools at the bottom of the page, and choose `tests/parser_test.txt`.
 
@@ -150,4 +165,4 @@ To run the parser test, unlock the app, open Developer tools at the bottom of th
 
 ## Tech Stack
 
-HTML, CSS and vanilla JavaScript. No backend, no build step, no external libraries. PDF is made through the browser's print dialog.
+HTML, CSS and vanilla JavaScript with a local Flask and pandas backend. There is no build step or database. PDF is made through the browser's print dialog.
