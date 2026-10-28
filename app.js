@@ -1987,6 +1987,214 @@ function clearDataForLock() {
   backupFile.value = "";
 }
 
+/* ===== IMPORT ===== */
+
+const MAX_IMPORT_ROWS = 500;
+const MAX_UNPARSED = 200;
+
+function cleanLine(line) {
+  return String(line)
+    .replace(/[\u200e\u200f\u202a-\u202e\ufeff]/g, "")
+    .replace(/[\u202f\u00a0]/g, " ")
+    .trim();
+}
+
+function validChatDate(year, month, day) {
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day;
+}
+
+function formatChatDate(first, second, yearText) {
+  const year = yearText.length === 2 ? 2000 + Number(yearText) : Number(yearText);
+  let day = Number(first);
+  let month = Number(second);
+
+  if (!validChatDate(year, month, day)) {
+    day = Number(second);
+    month = Number(first);
+
+    if (!validChatDate(year, month, day)) {
+      return "";
+    }
+  }
+
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function chatHeaderResult(dateParts, rest) {
+  const date = formatChatDate(dateParts[0], dateParts[1], dateParts[2]);
+  const message = rest.match(/^([^:]{1,60}):\s*(.*)$/);
+
+  if (message && message[1].trim()) {
+    return {
+      type: "message",
+      date,
+      sender: message[1].trim(),
+      text: message[2]
+    };
+  }
+
+  return { type: "system", date };
+}
+
+function parseChatHeader(line) {
+  const android = line.match(
+    /^(\d{1,2})\/(\d{1,2})\/(\d{2}(?:\d{2})?),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(?:[ap]\.?m\.?)?\s+-\s+(.*)$/i
+  );
+
+  if (android) {
+    return chatHeaderResult(android.slice(1, 4), android[7]);
+  }
+
+  const iphone = line.match(
+    /^\[(\d{1,2})\/(\d{1,2})\/(\d{2}(?:\d{2})?),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(?:[ap]\.?m\.?)?\]\s*(.*)$/i
+  );
+
+  if (iphone) {
+    return chatHeaderResult(iphone.slice(1, 4), iphone[7]);
+  }
+
+  return { type: "none" };
+}
+
+function orderKey(order) {
+  const customer = String(order.customer).trim().replace(/\s+/g, " ").toLowerCase();
+  const item = String(order.item).trim().toLowerCase();
+  const unit = String(order.unit).toLowerCase();
+  return [
+    order.date,
+    customer,
+    item,
+    order.quantity,
+    unit,
+    order.amount
+  ].join("|");
+}
+
+function normalizedImportName(name) {
+  return String(name).trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function importText(text, today, myName, existingOrders) {
+  const lines = String(text).split(/\r?\n/).map(cleanLine).filter(Boolean);
+  const headers = lines.map(parseChatHeader);
+  const mode = headers.some((header) =>
+    header.type === "message" || header.type === "system"
+  ) ? "chat" : "plain";
+  let rows = [];
+  let unparsed = [];
+  let skipped = 0;
+  let alreadySaved = 0;
+
+  if (mode === "plain") {
+    for (const line of lines) {
+      const result = parseLine(line);
+
+      if (result.ok) {
+        for (const row of result.rows) {
+          row.date = today;
+        }
+
+        rows.push(...result.rows);
+      } else {
+        unparsed.push({ text: line, reason: result.reason });
+      }
+    }
+  } else {
+    let currentSender = "";
+    let currentDate = "";
+    const ownName = normalizedImportName(myName);
+
+    for (let index = 0; index < lines.length; index += 1) {
+      const header = headers[index];
+      let entryText;
+
+      if (header.type === "system") {
+        skipped += 1;
+        currentSender = "";
+        continue;
+      }
+
+      if (header.type === "message") {
+        currentSender = header.sender;
+        currentDate = header.date;
+        entryText = header.text.trim();
+      } else {
+        if (!currentSender) {
+          skipped += 1;
+          continue;
+        }
+
+        entryText = lines[index];
+      }
+
+      if (/^<?media omitted>?$/i.test(entryText) ||
+          /^this message was deleted$/i.test(entryText) ||
+          /^you deleted this message$/i.test(entryText) ||
+          entryText === "null" ||
+          !/\d/.test(entryText)) {
+        skipped += 1;
+        continue;
+      }
+
+      let result = parseLine(entryText);
+
+      if (!result.ok && /^\d/.test(entryText) && /^\p{L}/u.test(currentSender) &&
+          normalizedImportName(currentSender) !== ownName) {
+        result = parseLine(`${currentSender} ${entryText}`);
+      }
+
+      if (!result.ok) {
+        unparsed.push({
+          text: entryText,
+          reason: `${result.reason} (from ${currentSender}, ${currentDate || today})`
+        });
+        continue;
+      }
+
+      for (const row of result.rows) {
+        row.date = currentDate || today;
+      }
+
+      rows.push(...result.rows);
+    }
+  }
+
+  const savedKeys = new Set(existingOrders.map(orderKey));
+  rows = rows.filter((row) => {
+    if (savedKeys.has(orderKey(row))) {
+      alreadySaved += 1;
+      return false;
+    }
+
+    return true;
+  });
+
+  const rowsCapped = rows.length > MAX_IMPORT_ROWS ? rows.length : 0;
+  const unparsedCapped = unparsed.length > MAX_UNPARSED ? unparsed.length : 0;
+
+  if (rowsCapped) {
+    rows = rows.slice(0, MAX_IMPORT_ROWS);
+  }
+
+  if (unparsedCapped) {
+    unparsed = unparsed.slice(0, MAX_UNPARSED);
+  }
+
+  return {
+    mode,
+    linesRead: lines.length,
+    rows,
+    unparsed,
+    skipped,
+    alreadySaved,
+    rowsCapped,
+    unparsedCapped
+  };
+}
+
 /* ===== UI WIRING ===== */
 
 const lockScreen = document.getElementById("lock-screen");
