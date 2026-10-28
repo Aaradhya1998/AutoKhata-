@@ -1,0 +1,501 @@
+id,date,customer,item,quantity,unit,amount,paid,due_date,status
+O0001,2026-10-21,Aarav K,aata,5,kg,247,0,2026-10-28,unpaid
+O0002,2026-10-20,Aditi M,tel,500,ml,85,0,2026-10-27,unpaid
+O0003,2026-10-19,Ajay S,chawal,1,kg,69,0,2026-10-26,unpaid
+O0004,2026-10-18,Akash R,anda,6,pcs,39,0,2026-10-25,unpaid
+O0005,2026-10-17,Amit P,chai patti,1,kg,242,0,2026-10-24,unpaid
+O0006,2026-10-16,Anil D,namak,1,kg,28,0,2026-10-23,unpaid
+O0007,2026-10-15,Anita T,masala,2,packet,64,0,2026-10-22,unpaid
+O0008,2026-10-14,Anjali G,chini,500,g,22,0,2026-10-21,unpaid
+O0009,2026-10-21,Arjun J,dal,500,g,69,0,2026-10-28,unpaid
+O0010,2026-10-20,Bhavna B,doodh,2,l,121,0,2026-10-27,unpaid
+O0011,2026-10-13,Deepak N,namak,1,kg,27,0,2026-10-20,unpaid
+O0012,2026-10-11,Divya V,masala,1,packet,39,0,2026-10-18,unpaid
+O0013,2026-10-09,Farhan L,chini,2,kg,98,0,2026-10-16,unpaid
+O0014,2026-10-07,Geeta A,dal,1,kg,134,0,2026-10-14,unpaid
+O0015,2026-10-05,Gopal H,doodh,1,l,63,0,2026-10-12,unpaid
+O0016,2026-10-03,Imran C,biscuit,2,packet,36,0,2026-10-10,unpaid
+O0017,2026-10-01,Ishita W,sabun,1,pcs,38,0,2026-10-08,unpaid
+O0018,2026-09-29,Jaya Y,besan,1,kg,105,0,2026-10-06,unpaid
+O0019,2026-09-27,Kabir F,aata,1,kg,51,0,2026-10-04,unpaid
+O0020,2026-09-25,Kavita K,tel,1,l,157,0,2026-10-02,unpaid
+O0021,2026-09-18,Kiran M,biscuit,1,packet,20,0,2026-09-25,unpaid
+O0022,2026-09-14,Komal S,sabun,1,pcs,38,0,2026-09-21,unpaid
+O0023,2026-09-10,Manoj R,besan,1,kg,108,0,2026-09-17,unpaid
+O0024,2026-09-06,Meena P,aata,2,kg,100,0,2026-09-13,unpaid
+O0025,2026-09-02,Mohan D,tel,2,l,316,0,2026-09-09,unpaid
+O0026,2026-08-29,Naina T,chawal,1,kg,70,0,2026-09-05,unpaid
+O0027,2026-08-25,Neha G,anda,6,pcs,44,0,2026-09-01,unpaid
+O0028,2026-08-21,Nikhil J,chai patti,500,g,129,0,2026-08-28,unpaid
+O0029,2026-08-17,Pankaj B,namak,2,kg,51,0,2026-08-24,unpaid
+O0030,2026-08-13,Pooja N,masala,1,packet,32,0,2026-08-20,unpaid
+O0031,2026-10-28,Aarav K,aata,1,kg,56,56,,paid
+O0032,2026-10-28,Aarav K,tel,500,ml,85,85,,paid
+O0033,2026-10-27,Aditi M,aata,1,kg,51,51,,paid
+O0034,2026-10-27,Aditi M,tel,500,ml,85,85,,paid
+O0035,2026-10-26,Ajay S,aata,2,kg,105,105,,paid
+O0036,2026-10-26,Ajay S,tel,2,l,315,315,,paid
+O0037,2026-10-25,Akash R,aata,1,kg,52,52,,paid
+O0038,2026-10-25,Akash R,tel,1,l,159,159,,paid
+O0039,2026-10-24,Amit P,aata,5,kg,250,250,,paid
+O0040,2026-10-24,Amit P,tel,2,l,319,319,,paid
+O0041,2026-10-23,Anil D,aata,5,kg,247,247,,paid
+O0042,2026-10-23,Anil D,tel,2,l,319,319,,paid
+O0043,2026-10-22,Anita T,aata,1,kg,54,54,,paid
+O0044,2026-10-22,Anita T,tel,2,l,314,314,,paid
+O0045,2026-10-21,Anjali G,aata,1,kg,53,53,,paid
+O0046,2026-10-21,Anjali G,tel,1,l,160,160,,paid
+O0047,2026-10-20,Arjun J,aata,5,kg,252,252,,paid
+O0048,2026-10-20,Arjun J,tel,500,ml,89,89,,paid
+O0049,2026-10-19,Bhavna B,aata,2,kg,100,100,,paid
+O0050,2026-10-19,Bhavna B,tel,500,ml,81,81,,paid
+O0051,2026-10-18,Deepak N,aata,2,kg,104,104,,paid
+O0052,2026-10-18,Deepak N,tel,1,l,157,157,,paid
+O0053,2026-10-17,Divya V,aata,1,kg,55,55,,paid
+O0054,2026-10-17,Divya V,tel,2,l,315,315,,paid
+O0055,2026-10-16,Farhan L,aata,1,kg,56,56,,paid
+O0056,2026-10-16,Farhan L,tel,1,l,160,160,,paid
+O0057,2026-10-15,Geeta A,aata,5,kg,251,251,,paid
+O0058,2026-10-15,Geeta A,tel,500,ml,85,85,,paid
+O0059,2026-10-14,Gopal H,aata,1,kg,51,51,,paid
+O0060,2026-10-14,Gopal H,tel,2,l,317,317,,paid
+O0061,2026-10-13,Imran C,aata,5,kg,250,250,,paid
+O0062,2026-10-13,Imran C,tel,2,l,318,318,,paid
+O0063,2026-10-12,Ishita W,aata,2,kg,107,107,,paid
+O0064,2026-10-12,Ishita W,tel,1,l,160,160,,paid
+O0065,2026-10-11,Jaya Y,aata,1,kg,50,50,,paid
+O0066,2026-10-11,Jaya Y,tel,2,l,316,316,,paid
+O0067,2026-10-10,Kabir F,aata,1,kg,48,48,,paid
+O0068,2026-10-10,Kabir F,tel,500,ml,83,83,,paid
+O0069,2026-10-09,Kavita K,aata,5,kg,248,248,,paid
+O0070,2026-10-09,Kavita K,tel,2,l,315,315,,paid
+O0071,2026-10-08,Kiran M,aata,5,kg,247,247,,paid
+O0072,2026-10-08,Kiran M,tel,1,l,160,160,,paid
+O0073,2026-10-07,Komal S,aata,5,kg,251,251,,paid
+O0074,2026-10-07,Komal S,tel,2,l,315,315,,paid
+O0075,2026-10-06,Manoj R,aata,5,kg,246,246,,paid
+O0076,2026-10-06,Manoj R,tel,2,l,312,312,,paid
+O0077,2026-10-05,Meena P,aata,5,kg,252,252,,paid
+O0078,2026-10-05,Meena P,tel,1,l,164,164,,paid
+O0079,2026-10-04,Mohan D,aata,2,kg,101,101,,paid
+O0080,2026-10-04,Mohan D,tel,1,l,160,160,,paid
+O0081,2026-10-03,Naina T,aata,1,kg,53,53,,paid
+O0082,2026-10-03,Naina T,tel,500,ml,85,85,,paid
+O0083,2026-10-02,Neha G,aata,5,kg,248,248,,paid
+O0084,2026-10-02,Neha G,tel,2,l,312,312,,paid
+O0085,2026-10-01,Nikhil J,aata,5,kg,250,250,,paid
+O0086,2026-10-01,Nikhil J,tel,2,l,317,317,,paid
+O0087,2026-09-30,Pankaj B,aata,5,kg,249,249,,paid
+O0088,2026-09-30,Pankaj B,tel,500,ml,85,85,,paid
+O0089,2026-09-29,Pooja N,aata,1,kg,54,54,,paid
+O0090,2026-09-29,Pooja N,tel,2,l,311,311,,paid
+O0091,2026-10-28,Jaya Y,chini,2,kg,96,96,,paid
+O0092,2026-10-28,Jaya Y,chai patti,500,g,121,121,,paid
+O0093,2026-10-27,Kabir F,chini,500,g,25,25,,paid
+O0094,2026-10-27,Kabir F,chai patti,500,g,124,124,,paid
+O0095,2026-10-26,Kavita K,chini,500,g,24,24,,paid
+O0096,2026-10-26,Kavita K,chai patti,1,kg,237,237,,paid
+O0097,2026-10-25,Kiran M,chini,500,g,26,26,,paid
+O0098,2026-10-25,Kiran M,chai patti,250,g,67,67,,paid
+O0099,2026-10-24,Komal S,chini,500,g,23,23,,paid
+O0100,2026-10-24,Komal S,chai patti,1,kg,241,241,,paid
+O0101,2026-10-23,Manoj R,chini,2,kg,94,94,,paid
+O0102,2026-10-23,Manoj R,chai patti,500,g,127,127,,paid
+O0103,2026-10-22,Meena P,chini,2,kg,96,96,,paid
+O0104,2026-10-22,Meena P,chai patti,250,g,67,67,,paid
+O0105,2026-10-21,Mohan D,chini,2,kg,95,95,,paid
+O0106,2026-10-21,Mohan D,chai patti,1,kg,240,240,,paid
+O0107,2026-10-20,Naina T,chini,1,kg,52,52,,paid
+O0108,2026-10-20,Naina T,chai patti,1,kg,240,240,,paid
+O0109,2026-10-19,Neha G,chini,1,kg,50,50,,paid
+O0110,2026-10-19,Neha G,chai patti,500,g,122,122,,paid
+O0111,2026-10-18,Nikhil J,chini,500,g,24,24,,paid
+O0112,2026-10-18,Nikhil J,chai patti,250,g,65,65,,paid
+O0113,2026-10-17,Pankaj B,chini,500,g,28,28,,paid
+O0114,2026-10-17,Pankaj B,chai patti,1,kg,239,239,,paid
+O0115,2026-10-16,Pooja N,chini,2,kg,95,95,,paid
+O0116,2026-10-16,Pooja N,chai patti,250,g,62,62,,paid
+O0117,2026-10-15,Pradeep V,chini,2,kg,100,100,,paid
+O0118,2026-10-15,Pradeep V,chai patti,250,g,64,64,,paid
+O0119,2026-10-14,Priya L,chini,500,g,21,21,,paid
+O0120,2026-10-14,Priya L,chai patti,500,g,122,122,,paid
+O0121,2026-10-13,Rahul A,chini,2,kg,95,95,,paid
+O0122,2026-10-13,Rahul A,chai patti,500,g,129,129,,paid
+O0123,2026-10-12,Rajesh H,chini,1,kg,47,47,,paid
+O0124,2026-10-12,Rajesh H,chai patti,1,kg,238,238,,paid
+O0125,2026-10-11,Rakesh C,chini,2,kg,99,99,,paid
+O0126,2026-10-11,Rakesh C,chai patti,1,kg,241,241,,paid
+O0127,2026-10-10,Rani W,chini,500,g,26,26,,paid
+O0128,2026-10-10,Rani W,chai patti,500,g,124,124,,paid
+O0129,2026-10-09,Ravi Y,chini,500,g,22,22,,paid
+O0130,2026-10-09,Ravi Y,chai patti,1,kg,240,240,,paid
+O0131,2026-10-08,Reena F,chini,1,kg,48,48,,paid
+O0132,2026-10-08,Reena F,chai patti,500,g,126,126,,paid
+O0133,2026-10-07,Ritika K,chini,2,kg,92,92,,paid
+O0134,2026-10-07,Ritika K,chai patti,1,kg,244,244,,paid
+O0135,2026-10-06,Rohan M,chini,2,kg,93,93,,paid
+O0136,2026-10-06,Rohan M,chai patti,250,g,65,65,,paid
+O0137,2026-10-05,Sahil S,chini,2,kg,96,96,,paid
+O0138,2026-10-05,Sahil S,chai patti,250,g,64,64,,paid
+O0139,2026-10-04,Sanjay R,chini,500,g,24,24,,paid
+O0140,2026-10-04,Sanjay R,chai patti,1,kg,241,241,,paid
+O0141,2026-10-03,Seema P,chini,500,g,25,25,,paid
+O0142,2026-10-03,Seema P,chai patti,250,g,65,65,,paid
+O0143,2026-10-02,Shalini D,chini,1,kg,47,47,,paid
+O0144,2026-10-02,Shalini D,chai patti,250,g,66,66,,paid
+O0145,2026-10-01,Sohan T,chini,2,kg,93,93,,paid
+O0146,2026-10-01,Sohan T,chai patti,250,g,69,69,,paid
+O0147,2026-09-30,Sunita G,chini,2,kg,92,92,,paid
+O0148,2026-09-30,Sunita G,chai patti,250,g,64,64,,paid
+O0149,2026-09-29,Suresh J,chini,500,g,25,25,,paid
+O0150,2026-09-29,Suresh J,chai patti,500,g,126,126,,paid
+O0151,2026-07-31,Priya L,tel,500,ml,85,85,,paid
+O0152,2026-09-25,Rahul A,sabun,1,pcs,36,36,,paid
+O0153,2026-09-23,Rajesh H,dal,1,kg,131,131,,paid
+O0154,2026-09-21,Rakesh C,namak,2,kg,48,48,,paid
+O0155,2026-09-19,Rani W,chawal,5,kg,335,335,,paid
+O0156,2026-09-17,Ravi Y,besan,1,kg,107,107,,paid
+O0157,2026-09-15,Reena F,doodh,2,l,119,119,,paid
+O0158,2026-09-13,Ritika K,masala,1,packet,34,34,,paid
+O0159,2026-09-11,Rohan M,anda,1,dozen,79,79,,paid
+O0160,2026-09-09,Sahil S,aata,1,kg,55,55,,paid
+O0161,2026-09-07,Sanjay R,biscuit,3,packet,60,60,,paid
+O0162,2026-09-05,Seema P,chini,500,g,25,25,,paid
+O0163,2026-09-03,Shalini D,chai patti,250,g,61,61,,paid
+O0164,2026-09-01,Sohan T,tel,2,l,316,316,,paid
+O0165,2026-08-30,Sunita G,sabun,6,pcs,217,217,,paid
+O0166,2026-08-28,Suresh J,dal,500,g,66,66,,paid
+O0167,2026-08-26,Tanvi B,namak,1,kg,23,23,,paid
+O0168,2026-08-24,Tarun N,chawal,1,kg,73,73,,paid
+O0169,2026-08-22,Usha V,besan,500,g,59,59,,paid
+O0170,2026-08-20,Varun L,doodh,500,ml,32,32,,paid
+O0171,2026-08-18,Vijay A,masala,1,packet,38,38,,paid
+O0172,2026-08-16,Vikas H,anda,6,pcs,45,45,,paid
+O0173,2026-08-14,Vimla C,aata,5,kg,246,246,,paid
+O0174,2026-08-12,Yash W,biscuit,3,packet,55,55,,paid
+O0175,2026-08-10,Zoya Y,chini,1,kg,52,52,,paid
+O0176,2026-08-08,Harish F,chai patti,1,kg,243,243,,paid
+O0177,2026-08-06,Leela K,tel,2,l,315,315,,paid
+O0178,2026-08-04,Mukesh M,sabun,3,pcs,109,109,,paid
+O0179,2026-08-02,Nisha S,dal,2,kg,265,265,,paid
+O0180,2026-07-31,Aarav K,namak,1,kg,25,25,,paid
+O0181,2026-10-15,Aarav K,dal,500,g,74,56,2026-10-22,partial
+O0182,2026-10-17,Aditi M,chai patti,500,g,125,31,2026-10-24,partial
+O0183,2026-10-21,Ajay S,aata,2,kg,107,80,2026-10-28,partial
+O0184,2026-10-20,Akash R,doodh,500,ml,34,8,2026-10-27,partial
+O0185,2026-10-17,Amit P,namak,1,kg,25,6,2026-10-24,partial
+O0186,2026-10-18,Anil D,tel,1,l,160,40,2026-10-25,partial
+O0187,2026-10-14,Anita T,biscuit,3,packet,58,44,2026-10-21,partial
+O0188,2026-10-21,Anjali G,masala,3,packet,102,51,2026-10-28,partial
+O0189,2026-10-20,Arjun J,chawal,1,kg,70,18,2026-10-27,partial
+O0190,2026-10-20,Bhavna B,sabun,6,pcs,217,54,2026-10-27,partial
+O0191,2026-10-05,Deepak N,chini,1,kg,51,13,2026-10-12,partial
+O0192,2026-09-21,Divya V,anda,1,dozen,79,59,2026-09-28,partial
+O0193,2026-09-23,Farhan L,besan,1,kg,107,54,2026-09-30,partial
+O0194,2026-10-05,Geeta A,dal,500,g,67,50,2026-10-12,partial
+O0195,2026-09-30,Gopal H,chai patti,500,g,121,30,2026-10-07,partial
+O0196,2026-10-03,Imran C,aata,1,kg,56,28,2026-10-10,partial
+O0197,2026-10-08,Ishita W,doodh,2,l,119,89,2026-10-15,partial
+O0198,2026-09-21,Jaya Y,namak,2,kg,50,12,2026-09-28,partial
+O0199,2026-10-12,Kabir F,tel,1,l,163,122,2026-10-19,partial
+O0200,2026-10-09,Kavita K,biscuit,2,packet,38,10,2026-10-16,partial
+O0201,2026-09-01,Kiran M,masala,2,packet,64,32,2026-09-08,partial
+O0202,2026-09-07,Komal S,chawal,1,kg,74,18,2026-09-14,partial
+O0203,2026-08-29,Manoj R,sabun,6,pcs,215,161,2026-09-05,partial
+O0204,2026-08-04,Meena P,chini,500,g,24,6,2026-08-11,partial
+O0205,2026-07-31,Mohan D,anda,6,pcs,42,10,2026-08-07,partial
+O0206,2026-09-09,Naina T,besan,2,kg,205,102,2026-09-16,partial
+O0207,2026-07-31,Neha G,dal,2,kg,264,132,2026-08-07,partial
+O0208,2026-09-10,Nikhil J,chai patti,1,kg,237,118,2026-09-17,partial
+O0209,2026-09-18,Pankaj B,aata,2,kg,103,26,2026-09-25,partial
+O0210,2026-08-22,Pooja N,doodh,1,l,60,15,2026-08-29,partial
+O0211,2026-09-23,Pradeep V,namak,1,kg,29,7,2026-09-30,partial
+O0212,2026-08-31,Priya L,tel,1,l,160,40,2026-09-07,partial
+O0213,2026-09-16,Rahul A,biscuit,2,packet,44,33,2026-09-23,partial
+O0214,2026-08-31,Rajesh H,masala,3,packet,102,51,2026-09-07,partial
+O0215,2026-10-18,Rakesh C,chawal,1,kg,70,18,2026-10-25,partial
+O0216,2026-08-08,Rani W,sabun,3,pcs,106,26,2026-08-15,partial
+O0217,2026-08-06,Ravi Y,chini,1,kg,48,36,2026-08-13,partial
+O0218,2026-09-11,Reena F,anda,1,dozen,83,62,2026-09-18,partial
+O0219,2026-10-07,Ritika K,besan,1,kg,108,27,2026-10-14,partial
+O0220,2026-09-19,Rohan M,dal,500,g,70,18,2026-09-26,partial
+O0221,2026-10-03,Aarav K,chai patti,1,kg,244,244,,paid
+O0222,2026-10-15,Aditi M,chini,2,kg,96,96,,paid
+O0223,2026-10-20,Ajay S,besan,1,kg,107,0,2026-10-27,unpaid
+O0224,2026-10-15,Akash R,doodh,1,l,60,60,,paid
+O0225,2026-10-22,Amit P,anda,2,dozen,158,158,,paid
+O0226,2026-10-19,Anil D,sabun,6,pcs,215,0,2026-10-26,unpaid
+O0227,2026-10-02,Anita T,aata,2,kg,104,104,,paid
+O0228,2026-10-03,Anjali G,sabun,6,pcs,219,219,,paid
+O0229,2026-10-14,Arjun J,biscuit,3,packet,57,57,,paid
+O0230,2026-10-03,Bhavna B,masala,3,packet,98,98,,paid
+O0231,2026-10-04,Deepak N,chai patti,1,kg,244,0,2026-10-11,unpaid
+O0232,2026-10-03,Divya V,dal,500,g,66,66,,paid
+O0233,2026-10-13,Farhan L,sabun,1,pcs,39,39,,paid
+O0234,2026-10-08,Geeta A,sabun,1,pcs,38,38,,paid
+O0235,2026-10-21,Gopal H,tel,2,l,311,311,,paid
+O0236,2026-10-10,Imran C,masala,2,packet,67,0,2026-10-17,unpaid
+O0237,2026-10-06,Ishita W,chai patti,500,g,121,121,,paid
+O0238,2026-09-29,Jaya Y,chini,1,kg,46,46,,paid
+O0239,2026-09-22,Kabir F,chai patti,1,kg,243,0,2026-09-29,unpaid
+O0240,2026-10-04,Kavita K,biscuit,3,packet,60,60,,paid
+O0241,2026-09-29,Kiran M,chai patti,500,g,123,123,,paid
+O0242,2026-08-21,Komal S,biscuit,2,packet,39,0,2026-08-28,unpaid
+O0243,2026-09-03,Manoj R,masala,3,packet,101,0,2026-09-10,unpaid
+O0244,2026-09-03,Meena P,biscuit,1,packet,20,0,2026-09-10,unpaid
+O0245,2026-10-18,Mohan D,doodh,2,l,115,115,,paid
+O0246,2026-10-21,Naina T,anda,2,dozen,156,156,,paid
+O0247,2026-09-16,Neha G,anda,1,dozen,80,0,2026-09-23,unpaid
+O0248,2026-10-15,Nikhil J,aata,1,kg,52,52,,paid
+O0249,2026-10-04,Pankaj B,sabun,6,pcs,211,211,,paid
+O0250,2026-08-03,Pooja N,sabun,3,pcs,111,0,2026-08-10,unpaid
+O0251,2026-10-17,Pradeep V,chawal,5,kg,335,335,,paid
+O0252,2026-10-05,Priya L,chai patti,1,kg,239,239,,paid
+O0253,2026-10-20,Rahul A,anda,1,dozen,76,76,,paid
+O0254,2026-10-07,Rajesh H,namak,2,kg,46,46,,paid
+O0255,2026-10-05,Rakesh C,sabun,6,pcs,211,0,2026-10-12,unpaid
+O0256,2026-08-07,Rani W,sabun,6,pcs,211,0,2026-08-14,unpaid
+O0257,2026-10-15,Ravi Y,tel,1,l,158,158,,paid
+O0258,2026-10-16,Reena F,doodh,500,ml,33,33,,paid
+O0259,2026-10-04,Ritika K,anda,1,dozen,80,80,,paid
+O0260,2026-10-26,Rohan M,biscuit,1,packet,22,22,,paid
+O0261,2026-10-17,Sahil S,dal,2,kg,262,262,,paid
+O0262,2026-10-16,Sanjay R,masala,1,packet,34,0,2026-10-23,unpaid
+O0263,2026-10-28,Seema P,sabun,1,pcs,37,37,,paid
+O0264,2026-10-07,Shalini D,chini,2,kg,95,95,,paid
+O0265,2026-10-20,Sohan T,masala,2,packet,66,66,,paid
+O0266,2026-10-07,Sunita G,masala,1,packet,35,0,2026-10-14,unpaid
+O0267,2026-10-28,Suresh J,chawal,5,kg,335,335,,paid
+O0268,2026-09-26,Tanvi B,chini,2,kg,100,0,2026-10-03,unpaid
+O0269,2026-10-06,Tarun N,masala,2,packet,72,72,,paid
+O0270,2026-10-06,Usha V,masala,3,packet,96,0,2026-10-13,unpaid
+O0271,2026-10-15,Varun L,namak,2,kg,45,45,,paid
+O0272,2026-10-18,Vijay A,aata,2,kg,105,105,,paid
+O0273,2026-10-17,Vikas H,namak,2,kg,46,46,,paid
+O0274,2026-10-05,Vimla C,chai patti,1,kg,240,240,,paid
+O0275,2026-08-14,Yash W,masala,2,packet,69,0,2026-08-21,unpaid
+O0276,2026-10-05,Zoya Y,sabun,3,pcs,110,110,,paid
+O0277,2026-10-10,Harish F,chawal,5,kg,334,0,2026-10-17,unpaid
+O0278,2026-08-10,Leela K,sabun,6,pcs,215,0,2026-08-17,unpaid
+O0279,2026-10-13,Mukesh M,doodh,500,ml,33,33,,paid
+O0280,2026-10-03,Nisha S,chawal,5,kg,335,335,,paid
+O0281,2026-09-16,Harish F,chai patti,250,g,67,0,2026-09-23,unpaid
+O0282,2026-10-05,Farhan L,anda,1,dozen,82,82,,paid
+O0283,2026-10-13,Tarun N,namak,2,kg,49,49,,paid
+O0284,2026-10-19,Varun L,dal,1,kg,134,134,,paid
+O0285,2026-10-02,Kavita K,biscuit,3,packet,60,0,2026-10-09,unpaid
+O0286,2026-10-05,Manoj R,chai patti,500,g,125,125,,paid
+O0287,2026-10-19,Sohan T,chawal,1,kg,67,67,,paid
+O0288,2026-10-25,Suresh J,besan,2,kg,203,203,,paid
+O0289,2026-10-13,Farhan L,chawal,5,kg,332,332,,paid
+O0290,2026-10-21,Vimla C,doodh,500,ml,32,32,,paid
+O0291,2026-10-19,Aarav K,chawal,1,kg,66,0,2026-10-26,unpaid
+O0292,2026-10-24,Rani W,namak,2,kg,45,45,,paid
+O0293,2026-10-19,Zoya Y,biscuit,2,packet,41,41,,paid
+O0294,2026-10-27,Komal S,chawal,5,kg,332,332,,paid
+O0295,2026-10-13,Vikas H,chini,2,kg,100,100,,paid
+O0296,2026-10-24,Shalini D,masala,3,packet,100,100,,paid
+O0297,2026-10-20,Anil D,chai patti,500,g,128,0,2026-10-27,unpaid
+O0298,2026-09-23,Ritika K,masala,3,packet,100,0,2026-09-30,unpaid
+O0299,2026-09-01,Pankaj B,sabun,3,pcs,110,0,2026-09-08,unpaid
+O0300,2026-08-04,Ravi Y,besan,500,g,54,0,2026-08-11,unpaid
+O0301,2026-10-07,Sahil S,chini,500,g,24,24,,paid
+O0302,2026-10-23,Divya V,aata,2,kg,105,105,,paid
+O0303,2026-09-14,Sohan T,aata,1,kg,52,0,2026-09-21,unpaid
+O0304,2026-10-01,Sunita G,biscuit,1,packet,24,24,,paid
+O0305,2026-09-23,Gopal H,sabun,6,pcs,214,0,2026-09-30,unpaid
+O0306,2026-10-21,Nikhil J,namak,1,kg,25,25,,paid
+O0307,2026-10-27,Vikas H,tel,1,l,163,163,,paid
+O0308,2026-09-15,Tanvi B,biscuit,1,packet,21,0,2026-09-22,unpaid
+O0309,2026-10-16,Sohan T,chawal,5,kg,336,336,,paid
+O0310,2026-10-15,Anil D,besan,1,kg,108,0,2026-10-22,unpaid
+O0311,2026-10-21,Ishita W,namak,1,kg,29,29,,paid
+O0312,2026-10-27,Vikas H,masala,1,packet,36,36,,paid
+O0313,2026-09-16,Rajesh H,tel,2,l,315,0,2026-09-23,unpaid
+O0314,2026-10-10,Sahil S,biscuit,2,packet,40,0,2026-10-17,unpaid
+O0315,2026-10-25,Komal S,tel,1,l,160,160,,paid
+O0316,2026-10-07,Sohan T,anda,2,dozen,154,154,,paid
+O0317,2026-10-20,Pooja N,doodh,500,ml,32,32,,paid
+O0318,2026-10-28,Zoya Y,namak,2,kg,48,48,,paid
+O0319,2026-10-17,Akash R,sabun,3,pcs,114,114,,paid
+O0320,2026-09-07,Pankaj B,chawal,1,kg,70,0,2026-09-14,unpaid
+O0321,2026-08-20,Pankaj B,chini,500,g,29,0,2026-08-27,unpaid
+O0322,2026-10-01,Ritika K,chawal,1,kg,72,0,2026-10-08,unpaid
+O0323,2026-10-02,Neha G,chini,1,kg,45,45,,paid
+O0324,2026-08-19,Sanjay R,besan,1,kg,107,0,2026-08-26,unpaid
+O0325,2026-10-02,Sunita G,biscuit,2,packet,39,39,,paid
+O0326,2026-10-16,Pooja N,dal,2,kg,267,267,,paid
+O0327,2026-10-13,Tanvi B,chawal,5,kg,335,0,2026-10-20,unpaid
+O0328,2026-09-17,Nisha S,aata,2,kg,104,0,2026-09-24,unpaid
+O0329,2026-08-20,Vimla C,tel,1,l,162,0,2026-08-27,unpaid
+O0330,2026-10-11,Pradeep V,masala,3,packet,100,100,,paid
+O0331,2026-09-08,Pooja N,besan,500,g,58,0,2026-09-15,unpaid
+O0332,2026-10-04,Mohan D,anda,6,pcs,42,42,,paid
+O0333,2026-09-29,Tanvi B,masala,2,packet,68,68,,paid
+O0334,2026-10-02,Seema P,biscuit,1,packet,18,0,2026-10-09,unpaid
+O0335,2026-09-09,Rahul A,chini,1,kg,45,0,2026-09-16,unpaid
+O0336,2026-10-20,Rajesh H,besan,500,g,55,0,2026-10-27,unpaid
+O0337,2026-10-02,Zoya Y,chini,1,kg,48,0,2026-10-09,unpaid
+O0338,2026-08-26,Komal S,namak,1,kg,25,0,2026-09-02,unpaid
+O0339,2026-08-14,Yash W,anda,1,dozen,84,0,2026-08-21,unpaid
+O0340,2026-08-20,Sunita G,chai patti,250,g,68,0,2026-08-27,unpaid
+O0341,2026-10-07,Amit P,chawal,1,kg,67,67,,paid
+O0342,2026-08-03,Nikhil J,namak,1,kg,26,0,2026-08-10,unpaid
+O0343,2026-10-13,Deepak N,aata,2,kg,100,0,2026-10-20,unpaid
+O0344,2026-10-15,Kabir F,tel,500,ml,87,87,,paid
+O0345,2026-10-03,Neha G,tel,500,ml,83,83,,paid
+O0346,2026-10-15,Anil D,sabun,6,pcs,214,0,2026-10-22,unpaid
+O0347,2026-10-03,Priya L,dal,1,kg,139,0,2026-10-10,unpaid
+O0348,2026-10-07,Ishita W,aata,2,kg,104,104,,paid
+O0349,2026-10-26,Shalini D,biscuit,2,packet,43,43,,paid
+O0350,2026-09-30,Kavita K,besan,1,kg,106,0,2026-10-07,unpaid
+O0351,2026-10-16,Yash W,biscuit,1,packet,19,19,,paid
+O0352,2026-10-10,Mohan D,chawal,5,kg,331,331,,paid
+O0353,2026-09-16,Vimla C,aata,5,kg,254,0,2026-09-23,unpaid
+O0354,2026-10-15,Usha V,sabun,6,pcs,216,0,2026-10-22,unpaid
+O0355,2026-09-15,Vimla C,masala,1,packet,38,0,2026-09-22,unpaid
+O0356,2026-10-08,Vijay A,dal,2,kg,265,265,,paid
+O0357,2026-10-04,Shalini D,namak,1,kg,29,0,2026-10-11,unpaid
+O0358,2026-10-03,Sanjay R,biscuit,1,packet,23,23,,paid
+O0359,2026-09-15,Meena P,chawal,5,kg,335,0,2026-09-22,unpaid
+O0360,2026-10-03,Divya V,chai patti,500,g,127,127,,paid
+O0361,2026-09-30,Rahul A,chawal,5,kg,335,0,2026-10-07,unpaid
+O0362,2026-10-07,Tanvi B,biscuit,1,packet,18,0,2026-10-14,unpaid
+O0363,2026-09-01,Tarun N,masala,3,packet,100,0,2026-09-08,unpaid
+O0364,2026-10-21,Anil D,chawal,1,kg,71,0,2026-10-28,unpaid
+O0365,2026-08-08,Meena P,chawal,5,kg,339,0,2026-08-15,unpaid
+O0366,2026-10-21,Meena P,biscuit,1,packet,23,23,,paid
+O0367,2026-09-10,Harish F,sabun,1,pcs,42,0,2026-09-17,unpaid
+O0368,2026-10-14,Amit P,besan,1,kg,109,0,2026-10-21,unpaid
+O0369,2026-10-27,Neha G,aata,2,kg,105,105,,paid
+O0370,2026-09-30,Anjali G,chai patti,250,g,65,65,,paid
+O0371,2026-10-05,Pooja N,besan,2,kg,205,205,,paid
+O0372,2026-10-02,Reena F,anda,2,dozen,155,0,2026-10-09,unpaid
+O0373,2026-10-15,Vimla C,chawal,1,kg,70,70,,paid
+O0374,2026-10-21,Geeta A,doodh,500,ml,36,36,,paid
+O0375,2026-10-08,Meena P,doodh,500,ml,32,32,,paid
+O0376,2026-10-25,Jaya Y,biscuit,1,packet,24,24,,paid
+O0377,2026-09-24,Geeta A,aata,1,kg,52,0,2026-10-01,unpaid
+O0378,2026-09-25,Imran C,dal,500,g,72,0,2026-10-02,unpaid
+O0379,2026-10-06,Geeta A,doodh,500,ml,35,0,2026-10-13,unpaid
+O0380,2026-10-24,Aarav K,tel,2,l,315,315,,paid
+O0381,2026-10-07,Vijay A,aata,1,kg,48,48,,paid
+O0382,2026-09-05,Manoj R,sabun,3,pcs,106,0,2026-09-12,unpaid
+O0383,2026-10-24,Divya V,besan,1,kg,107,107,,paid
+O0384,2026-10-14,Anjali G,biscuit,2,packet,42,0,2026-10-21,unpaid
+O0385,2026-10-12,Reena F,dal,2,kg,261,261,,paid
+O0386,2026-08-16,Suresh J,chawal,5,kg,339,0,2026-08-23,unpaid
+O0387,2026-10-13,Aditi M,anda,1,dozen,84,84,,paid
+O0388,2026-09-29,Anita T,biscuit,1,packet,17,17,,paid
+O0389,2026-09-16,Kiran M,tel,1,l,163,0,2026-09-23,unpaid
+O0390,2026-09-10,Sahil S,anda,2,dozen,160,0,2026-09-17,unpaid
+O0391,2026-10-09,Kabir F,anda,6,pcs,39,39,,paid
+O0392,2026-08-12,Yash W,besan,500,g,55,0,2026-08-19,unpaid
+O0393,2026-08-25,Pankaj B,doodh,1,l,60,0,2026-09-01,unpaid
+O0394,2026-08-31,Neha G,anda,1,dozen,84,0,2026-09-07,unpaid
+O0395,2026-10-24,Ishita W,namak,2,kg,45,45,,paid
+O0396,2026-10-20,Anil D,anda,6,pcs,42,0,2026-10-27,unpaid
+O0397,2026-10-27,Vijay A,sabun,6,pcs,217,217,,paid
+O0398,2026-08-25,Komal S,doodh,2,l,118,0,2026-09-01,unpaid
+O0399,2026-10-15,Zoya Y,chawal,5,kg,335,0,2026-10-22,unpaid
+O0400,2026-10-02,Gopal H,chai patti,500,g,122,0,2026-10-09,unpaid
+O0401,2026-10-21,Tarun N,masala,2,packet,70,70,,paid
+O0402,2026-08-04,Usha V,namak,1,kg,28,0,2026-08-11,unpaid
+O0403,2026-09-08,Sohan T,doodh,500,ml,30,0,2026-09-15,unpaid
+O0404,2026-10-07,Zoya Y,anda,6,pcs,40,40,,paid
+O0405,2026-10-18,Tanvi B,chini,2,kg,98,0,2026-10-25,unpaid
+O0406,2026-10-14,Geeta A,doodh,500,ml,32,32,,paid
+O0407,2026-09-25,Kavita K,sabun,1,pcs,34,0,2026-10-02,unpaid
+O0408,2026-10-09,Bhavna B,aata,5,kg,247,247,,paid
+O0409,2026-10-15,Jaya Y,biscuit,3,packet,59,59,,paid
+O0410,2026-10-04,Neha G,chai patti,250,g,65,65,,paid
+O0411,2026-10-07,Nikhil J,namak,2,kg,50,50,,paid
+O0412,2026-10-21,Seema P,anda,2,dozen,154,154,,paid
+O0413,2026-10-22,Aarav K,masala,1,packet,35,35,,paid
+O0414,2026-10-28,Kabir F,biscuit,3,packet,58,58,,paid
+O0415,2026-10-11,Divya V,besan,500,g,57,57,,paid
+O0416,2026-09-06,Rani W,chini,1,kg,44,0,2026-09-13,unpaid
+O0417,2026-09-29,Nikhil J,chini,1,kg,51,51,,paid
+O0418,2026-10-06,Nikhil J,namak,2,kg,48,48,,paid
+O0419,2026-10-18,Anjali G,tel,2,l,316,316,,paid
+O0420,2026-09-05,Vimla C,chini,1,kg,45,0,2026-09-12,unpaid
+O0421,2026-10-16,Imran C,chai patti,250,g,65,65,,paid
+O0422,2026-10-18,Zoya Y,dal,1,kg,133,133,,paid
+O0423,2026-10-25,Amit P,chai patti,1,kg,239,239,,paid
+O0424,2026-09-07,Leela K,besan,2,kg,203,0,2026-09-14,unpaid
+O0425,2026-10-20,Imran C,dal,500,g,73,73,,paid
+O0426,2026-10-20,Bhavna B,tel,2,l,316,0,2026-10-27,unpaid
+O0427,2026-07-31,Nisha S,namak,2,kg,52,0,2026-08-07,unpaid
+O0428,2026-10-26,Kiran M,biscuit,2,packet,44,44,,paid
+O0429,2026-09-25,Kavita K,aata,2,kg,106,0,2026-10-02,unpaid
+O0430,2026-10-14,Amit P,aata,1,kg,52,52,,paid
+O0431,2026-10-08,Vimla C,chini,2,kg,99,99,,paid
+O0432,2026-10-10,Rahul A,chai patti,1,kg,236,236,,paid
+O0433,2026-08-15,Pankaj B,namak,1,kg,25,0,2026-08-22,unpaid
+O0434,2026-10-24,Ritika K,aata,2,kg,101,101,,paid
+O0435,2026-09-08,Vijay A,besan,500,g,57,0,2026-09-15,unpaid
+O0436,2026-10-21,Sanjay R,besan,1,kg,106,106,,paid
+O0437,2026-10-23,Rajesh H,doodh,1,l,60,60,,paid
+O0438,2026-10-18,Mohan D,namak,1,kg,29,29,,paid
+O0439,2026-10-18,Sanjay R,chini,2,kg,100,100,,paid
+O0440,2026-10-05,Mohan D,namak,1,kg,25,25,,paid
+O0441,2026-10-19,Anil D,doodh,1,l,64,0,2026-10-26,unpaid
+O0442,2026-10-05,Sohan T,sabun,6,pcs,212,0,2026-10-12,unpaid
+O0443,2026-10-08,Kavita K,masala,2,packet,66,66,,paid
+O0444,2026-08-15,Seema P,chini,2,kg,100,0,2026-08-22,unpaid
+O0445,2026-10-28,Nikhil J,doodh,1,l,58,58,,paid
+O0446,2026-10-04,Geeta A,biscuit,1,packet,19,19,,paid
+O0447,2026-10-19,Arjun J,masala,1,packet,37,37,,paid
+O0448,2026-10-05,Usha V,chai patti,250,g,69,69,,paid
+O0449,2026-08-12,Komal S,tel,2,l,315,0,2026-08-19,unpaid
+O0450,2026-10-02,Bhavna B,besan,2,kg,203,203,,paid
+O0451,2026-10-15,Suresh J,doodh,2,l,117,117,,paid
+O0452,2026-08-03,Pankaj B,besan,1,kg,104,0,2026-08-10,unpaid
+O0453,2026-10-03,Rakesh C,masala,2,packet,67,67,,paid
+O0454,2026-08-15,Meena P,biscuit,2,packet,40,0,2026-08-22,unpaid
+O0455,2026-10-12,Usha V,anda,6,pcs,41,41,,paid
+O0456,2026-09-19,Vijay A,aata,5,kg,251,0,2026-09-26,unpaid
+O0457,2026-09-29,Zoya Y,chini,2,kg,98,98,,paid
+O0458,2026-10-26,Yash W,masala,1,packet,35,35,,paid
+O0459,2026-09-11,Pankaj B,anda,6,pcs,41,0,2026-09-18,unpaid
+O0460,2026-10-17,Vikas H,aata,2,kg,100,100,,paid
+O0461,2026-09-29,Gopal H,chini,2,kg,100,100,,paid
+O0462,2026-09-12,Komal S,aata,2,kg,105,0,2026-09-19,unpaid
+O0463,2026-08-22,Sohan T,biscuit,3,packet,54,0,2026-08-29,unpaid
+O0464,2026-10-20,Leela K,dal,500,g,72,72,,paid
+O0465,2026-08-28,Suresh J,chini,1,kg,47,0,2026-09-04,unpaid
+O0466,2026-10-21,Kavita K,anda,2,dozen,161,161,,paid
+O0467,2026-10-02,Pooja N,biscuit,3,packet,60,60,,paid
+O0468,2026-10-18,Aditi M,besan,500,g,55,0,2026-10-25,unpaid
+O0469,2026-10-17,Nikhil J,dal,2,kg,265,265,,paid
+O0470,2026-10-11,Divya V,chai patti,500,g,122,0,2026-10-18,unpaid
+O0471,2026-10-03,Rajesh H,chai patti,1,kg,236,236,,paid
+O0472,2026-09-18,Mohan D,namak,2,kg,48,0,2026-09-25,unpaid
+O0473,2026-10-02,Ishita W,masala,1,packet,35,0,2026-10-09,unpaid
+O0474,2026-09-23,Imran C,chini,2,kg,96,0,2026-09-30,unpaid
+O0475,2026-10-11,Arjun J,doodh,2,l,116,116,,paid
+O0476,2026-08-23,Vimla C,besan,1,kg,109,0,2026-08-30,unpaid
+O0477,2026-10-03,Kabir F,dal,500,g,70,70,,paid
+O0478,2026-10-16,Nisha S,chai patti,500,g,125,125,,paid
+O0479,2026-10-18,Ajay S,chawal,5,kg,331,0,2026-10-25,unpaid
+O0480,2026-09-17,Zoya Y,chini,1,kg,48,0,2026-09-24,unpaid
+O0481,2026-10-14,Harish F,anda,1,dozen,78,78,,paid
+O0482,2026-09-04,Priya L,masala,3,packet,100,0,2026-09-11,unpaid
+O0483,2026-10-15,Vijay A,chini,1,kg,51,51,,paid
+O0484,2026-10-19,Vikas H,doodh,500,ml,29,29,,paid
+O0485,2026-09-01,Kiran M,biscuit,3,packet,58,0,2026-09-08,unpaid
+O0486,2026-10-02,Deepak N,biscuit,1,packet,20,0,2026-10-09,unpaid
+O0487,2026-09-16,Rohan M,namak,1,kg,22,0,2026-09-23,unpaid
+O0488,2026-09-05,Seema P,chai patti,1,kg,244,0,2026-09-12,unpaid
+O0489,2026-10-09,Deepak N,sabun,6,pcs,216,0,2026-10-16,unpaid
+O0490,2026-10-21,Ajay S,masala,3,packet,100,100,,paid
+O0491,2026-10-10,Meena P,aata,5,kg,248,248,,paid
+O0492,2026-10-17,Shalini D,doodh,1,l,57,57,,paid
+O0493,2026-10-17,Ravi Y,anda,1,dozen,84,84,,paid
+O0494,2026-10-25,Jaya Y,aata,5,kg,248,248,,paid
+O0495,2026-09-29,Priya L,chai patti,250,g,65,65,,paid
+O0496,2026-10-28,Aarav K,aata,1,kg,56,56,,paid
+O0497,2026-10-28,Aarav K,tel,500,ml,85,85,,paid
+O0498,2026-10-27,Aditi M,aata,1,kg,51,51,,paid
+O0499,2026-10-27,Aditi M,tel,500,ml,85,85,,paid
+O0500,2026-10-26,Ajay S,aata,2,kg,105,105,,paid
