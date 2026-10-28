@@ -20,7 +20,7 @@
           <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password">
         </div>
 
-        <button id="submit-password" type="submit">Continue</button>
+        <button id="submit-password" class="btn-primary" type="submit">Continue</button>
         <p id="lock-error" class="error-message" role="alert" aria-live="polite"></p>
       </form>
     </div>
@@ -29,11 +29,23 @@
   <section id="app" class="hidden">
     <header class="no-print">
       <h1>Auto Khata</h1>
-      <button id="lock-button" type="button">Lock</button>
+      <button id="lock-button" class="btn-secondary" type="button">Lock</button>
     </header>
+    <nav id="tabs" class="no-print" aria-label="Main sections">
+      <button type="button" data-tab="home">Home</button>
+      <button type="button" data-tab="add">Add orders</button>
+      <button type="button" data-tab="dues">Dues</button>
+      <button type="button" data-tab="customers">Customers</button>
+      <button type="button" data-tab="invoice">Invoice</button>
+      <button type="button" data-tab="settings">Settings</button>
+    </nav>
     <main id="main">
-      <section id="dashboard-section">
+      <section id="dashboard-section" data-view="home">
         <h2>Dashboard</h2>
+        <div id="home-empty" class="hidden">
+          <p>No orders yet</p>
+          <button id="home-add-first" class="btn-primary" type="button">Add your first order</button>
+        </div>
         <div id="dash-totals"></div>
         <h3>Top customers</h3>
         <ol id="top-customers"></ol>
@@ -41,21 +53,21 @@
         <ol id="top-items"></ol>
       </section>
 
-      <section id="settings-section">
+      <section id="settings-section" data-view="settings">
         <h2>Settings</h2>
         <label for="shop-name">Shop name</label>
         <input id="shop-name" type="text">
-        <button id="shop-save" type="button">Save</button>
+        <button id="shop-save" class="btn-primary" type="button">Save</button>
         <span id="shop-saved" role="status"></span>
       </section>
 
-      <section id="dues-section">
+      <section id="dues-section" data-view="dues">
         <h2>Dues</h2>
         <div id="dues-buckets"></div>
         <div id="action-panel" class="hidden"></div>
       </section>
 
-      <section id="invoice-section">
+      <section id="invoice-section" data-view="invoice">
         <h2>Invoice</h2>
         <div id="invoice-controls" class="no-print">
           <label for="invoice-customer">Customer</label>
@@ -63,7 +75,7 @@
             <option value="">Choose customer</option>
           </select>
           <div id="invoice-orders"></div>
-          <button id="invoice-create" type="button">Create invoice</button>
+          <button id="invoice-create" class="btn-primary" type="button">Create invoice</button>
           <p id="invoice-error" role="alert" aria-live="polite"></p>
         </div>
 
@@ -79,17 +91,19 @@
           <label for="inv-date">Date</label>
           <input id="inv-date" type="date">
 
-          <table id="inv-lines">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Qty</th>
-                <th>Unit</th>
-                <th>Amount</th>
-              </tr>
-            </thead>
-            <tbody id="inv-body"></tbody>
-          </table>
+          <div class="table-wrap">
+            <table id="inv-lines">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Qty</th>
+                  <th>Unit</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody id="inv-body"></tbody>
+            </table>
+          </div>
 
           <div id="inv-totals">
             <p>Total: <span id="inv-total"></span></p>
@@ -99,103 +113,111 @@
           </div>
 
           <div class="no-print">
-            <button id="inv-print" type="button">Download PDF</button>
-            <button id="inv-close" type="button">Close invoice</button>
+            <button id="inv-print" class="btn-primary" type="button">Download PDF</button>
+            <button id="inv-close" class="btn-secondary" type="button">Close invoice</button>
           </div>
         </div>
       </section>
 
-      <section id="data-section">
+      <section id="data-section" data-view="settings">
         <h2>Data</h2>
         <p>Export for Excel, or make a backup. Your data lives only in this browser, so export a backup every week.</p>
-        <button id="export-orders" type="button">Export orders CSV</button>
-        <button id="export-customers" type="button">Export customers CSV</button>
-        <button id="backup-download" type="button">Download backup</button>
+        <button id="export-orders" class="btn-secondary" type="button">Export orders CSV</button>
+        <button id="export-customers" class="btn-secondary" type="button">Export customers CSV</button>
+        <button id="backup-download" class="btn-secondary" type="button">Download backup</button>
         <label for="backup-file">Restore from backup</label>
         <input id="backup-file" type="file" accept=".json,application/json">
         <p id="data-message" role="status" aria-live="polite"></p>
       </section>
 
-      <section id="customers-section">
+      <section id="customers-section" data-view="customers">
         <h2>Customers</h2>
-        <table id="customers-table">
-          <thead>
-            <tr>
-              <th>Customer</th>
-              <th>Total sales</th>
-              <th>Paid</th>
-              <th>Balance due</th>
-              <th>Oldest unpaid date</th>
-            </tr>
-          </thead>
-          <tbody id="customers-body"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table id="customers-table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Total sales</th>
+                <th>Paid</th>
+                <th>Balance due</th>
+                <th>Oldest unpaid date</th>
+              </tr>
+            </thead>
+            <tbody id="customers-body"></tbody>
+          </table>
+        </div>
       </section>
 
-      <section id="pairs-section">
+      <section id="pairs-section" data-view="home">
         <h2>Bought together</h2>
         <p id="pairs-note"></p>
         <ol id="pairs-list"></ol>
       </section>
 
-      <section id="quick-entry">
+      <section id="quick-entry" data-view="add">
         <h2>Quick entry</h2>
         <label for="entry-text">One order line per text line</label>
         <textarea id="entry-text" rows="3" placeholder="Ravi 2kg aata 1 tel oil pending"></textarea>
-        <button id="entry-add" type="button">Add to preview</button>
+        <p class="field-hint">Press Ctrl+Enter to add</p>
+        <button id="entry-add" class="btn-primary" type="button">Add to preview</button>
         <label for="import-file">Import .txt file (plain order lines or WhatsApp chat export)</label>
         <input id="import-file" type="file" accept=".txt,text/plain">
         <label for="import-myname">My name in the chat (optional)</label>
         <input id="import-myname" type="text" placeholder="the name shown for your own messages">
         <p id="import-message" role="status" aria-live="polite"></p>
+        <p id="add-message" role="status" aria-live="polite"></p>
       </section>
 
-      <section id="preview-section" class="hidden">
+      <section id="preview-section" class="hidden" data-view="add">
         <h2>Preview (nothing is saved yet)</h2>
         <div id="unparsed-area"></div>
-        <table id="preview-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Customer</th>
-              <th>Item</th>
-              <th>Qty</th>
-              <th>Unit</th>
-              <th>Amount</th>
-              <th>Paid</th>
-              <th>Status</th>
-              <th>Due date</th>
-              <th>(remove)</th>
-            </tr>
-          </thead>
-          <tbody id="preview-body"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table id="preview-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Unit</th>
+                <th>Amount</th>
+                <th>Paid</th>
+                <th>Status</th>
+                <th>Due date</th>
+                <th>(remove)</th>
+              </tr>
+            </thead>
+            <tbody id="preview-body"></tbody>
+          </table>
+        </div>
         <p id="preview-error" role="alert" aria-live="polite"></p>
-        <button id="preview-confirm" type="button">Confirm and save</button>
-        <button id="preview-cancel" type="button">Cancel</button>
+        <button id="preview-confirm" class="btn-primary" type="button">Confirm and save</button>
+        <button id="preview-cancel" class="btn-secondary" type="button">Cancel</button>
       </section>
 
-      <section id="orders-section">
+      <section id="orders-section" data-view="customers">
         <h2>Orders</h2>
         <p id="orders-count">0 orders</p>
-        <table id="orders-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Customer</th>
-              <th>Item</th>
-              <th>Qty</th>
-              <th>Amount</th>
-              <th>Paid</th>
-              <th>Status</th>
-              <th>Due date</th>
-            </tr>
-          </thead>
-          <tbody id="orders-body"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table id="orders-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Amount</th>
+                <th>Paid</th>
+                <th>Status</th>
+                <th>Due date</th>
+              </tr>
+            </thead>
+            <tbody id="orders-body"></tbody>
+          </table>
+        </div>
       </section>
 
-      <details id="dev-tools">
+      <details id="dev-tools" data-view="settings">
         <summary>Developer tools</summary>
         <label for="parser-test-file">Parser test file</label>
         <input id="parser-test-file" type="file" accept=".txt">

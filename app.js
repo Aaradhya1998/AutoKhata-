@@ -466,6 +466,7 @@ function renderUnparsedLines() {
     const retryButton = document.createElement("button");
     retryButton.type = "button";
     retryButton.textContent = "Retry";
+    retryButton.className = "btn-secondary";
     retryButton.addEventListener("click", () => {
       const result = parseLine(input.value);
 
@@ -484,6 +485,7 @@ function renderUnparsedLines() {
     const skipButton = document.createElement("button");
     skipButton.type = "button";
     skipButton.textContent = "Skip";
+    skipButton.className = "btn-secondary";
     skipButton.addEventListener("click", () => {
       unparsedLines.splice(index, 1);
       previewError.textContent = "";
@@ -542,6 +544,7 @@ function renderPreview() {
     const removeButton = document.createElement("button");
     removeButton.type = "button";
     removeButton.textContent = "Remove";
+    removeButton.className = "btn-secondary";
     removeButton.addEventListener("click", () => {
       previewRows.splice(index, 1);
       previewError.textContent = "";
@@ -641,6 +644,8 @@ function confirmAndSavePreview() {
     return;
   }
 
+  const savedCount = previewRows.length;
+
   const loadedCustomers = Store.load("customers");
   const customers = Array.isArray(loadedCustomers) ? loadedCustomers : [];
 
@@ -671,6 +676,7 @@ function confirmAndSavePreview() {
   renderOrders();
   renderDashboard();
   renderDues();
+  showAddSavedMessage(savedCount);
 }
 
 function cancelPreview() {
@@ -695,7 +701,7 @@ function renderOrders() {
   });
 
   ordersBody.replaceChildren();
-  ordersCount.textContent = `${orders.length} orders`;
+  ordersCount.textContent = plural(orders.length, "order");
   populateInvoiceCustomers();
 
   if (newestFirst.length === 0) {
@@ -717,7 +723,7 @@ function renderOrders() {
     appendOrderCell(tableRow, order.quantity);
     appendOrderCell(tableRow, order.amount);
     appendOrderCell(tableRow, order.paid);
-    appendOrderCell(tableRow, order.status);
+    appendPillCell(tableRow, order.status, order.status);
     appendOrderCell(tableRow, order.due_date);
     ordersBody.appendChild(tableRow);
   }
@@ -949,10 +955,13 @@ function renderDashboard() {
       appendDashboardCell(tableRow, customer.name);
       appendDashboardCell(tableRow, formatMoney(customer.total));
       appendDashboardCell(tableRow, formatMoney(customer.paid));
-      appendDashboardCell(
+      const customerStatus = customer.balance <= 0
+        ? "paid"
+        : customer.paid > 0 ? "partial" : "unpaid";
+      appendPillCell(
         tableRow,
         formatMoney(customer.balance),
-        customer.balance > 0 ? "amount-due" : ""
+        customerStatus
       );
       appendDashboardCell(tableRow, customer.oldestUnpaid || "-");
       customersBody.appendChild(tableRow);
@@ -1155,6 +1164,7 @@ function appendActionCloseButton() {
   const closeButton = document.createElement("button");
   closeButton.type = "button";
   closeButton.textContent = "Close";
+  closeButton.className = "btn-secondary";
   closeButton.addEventListener("click", closeActionPanel);
   actionPanel.appendChild(closeButton);
 }
@@ -1196,6 +1206,7 @@ function openReminderPanel(customer) {
   const sendButton = document.createElement("button");
   sendButton.type = "button";
   sendButton.textContent = "Send on WhatsApp";
+  sendButton.className = "btn-primary";
   sendButton.addEventListener("click", () => {
     const phone = normalizePhone(phoneInput.value);
 
@@ -1264,6 +1275,7 @@ function openPaymentPanel(customer) {
   const saveButton = document.createElement("button");
   saveButton.type = "button";
   saveButton.textContent = "Save payment";
+  saveButton.className = "btn-primary";
   saveButton.addEventListener("click", () => {
     const amount = amountInput.value === "" ? NaN : Number(amountInput.value);
     const loadedOrders = Store.load("orders");
@@ -1324,7 +1336,7 @@ function renderDues() {
     heading.textContent = bucket.title;
 
     const count = document.createElement("p");
-    count.textContent = `${buckets[bucket.key].length} customers`;
+    count.textContent = plural(buckets[bucket.key].length, "customer");
 
     const table = document.createElement("table");
     appendDuesHeader(table);
@@ -1349,6 +1361,7 @@ function renderDues() {
         const remindButton = document.createElement("button");
         remindButton.type = "button";
         remindButton.textContent = "Remind";
+        remindButton.className = "btn-primary";
         remindButton.addEventListener("click", () => openReminderPanel(customer));
         remindCell.appendChild(remindButton);
         row.appendChild(remindCell);
@@ -1357,6 +1370,7 @@ function renderDues() {
         const payButton = document.createElement("button");
         payButton.type = "button";
         payButton.textContent = "Pay";
+        payButton.className = "btn-secondary";
         payButton.addEventListener("click", () => openPaymentPanel(customer));
         payCell.appendChild(payButton);
         row.appendChild(payCell);
@@ -1366,7 +1380,10 @@ function renderDues() {
     }
 
     table.appendChild(body);
-    block.append(heading, count, table);
+    const tableWrap = document.createElement("div");
+    tableWrap.className = "table-wrap";
+    tableWrap.appendChild(table);
+    block.append(heading, count, tableWrap);
     duesBuckets.appendChild(block);
   }
 }
@@ -2196,6 +2213,61 @@ function importText(text, today, myName, existingOrders) {
   };
 }
 
+/* ===== NAV ===== */
+
+function plural(number, word) {
+  return `${number} ${word}${number === 1 ? "" : "s"}`;
+}
+
+function appendPillCell(tableRow, text, status) {
+  const cell = document.createElement("td");
+  const pill = document.createElement("span");
+  const safeStatus = ["paid", "partial", "unpaid"].includes(status)
+    ? status
+    : "unpaid";
+  pill.className = `pill pill-${safeStatus}`;
+  pill.textContent = text;
+  cell.appendChild(pill);
+  tableRow.appendChild(cell);
+}
+
+function clearAddMessage() {
+  addMessage.replaceChildren();
+  addMessage.className = "";
+}
+
+function showAddSavedMessage(count) {
+  addMessage.replaceChildren();
+  addMessage.className = "msg-ok";
+  addMessage.appendChild(document.createTextNode(`Saved ${plural(count, "order")}.`));
+
+  const viewButton = document.createElement("button");
+  viewButton.type = "button";
+  viewButton.className = "btn-secondary";
+  viewButton.textContent = "View orders";
+  viewButton.addEventListener("click", () => showView("customers"));
+  addMessage.appendChild(viewButton);
+}
+
+function showView(name) {
+  for (const element of viewElements) {
+    element.classList.toggle("view-hidden", element.dataset.view !== name);
+  }
+
+  for (const button of tabButtons) {
+    if (button.dataset.tab === name) {
+      button.setAttribute("aria-current", "page");
+    } else {
+      button.removeAttribute("aria-current");
+    }
+  }
+
+  const loadedOrders = Store.load("orders");
+  const orders = Array.isArray(loadedOrders) ? loadedOrders : [];
+  homeEmpty.classList.toggle("hidden", orders.length > 0);
+  window.scrollTo(0, 0);
+}
+
 /* ===== UI WIRING ===== */
 
 const lockScreen = document.getElementById("lock-screen");
@@ -2253,6 +2325,11 @@ const dataMessage = document.getElementById("data-message");
 const importFile = document.getElementById("import-file");
 const importMyName = document.getElementById("import-myname");
 const importMessage = document.getElementById("import-message");
+const tabButtons = Array.from(document.querySelectorAll("#tabs [data-tab]"));
+const viewElements = Array.from(document.querySelectorAll("[data-view]"));
+const homeEmpty = document.getElementById("home-empty");
+const homeAddFirst = document.getElementById("home-add-first");
+const addMessage = document.getElementById("add-message");
 
 let unlocked = false;
 const cryptoAvailable = Boolean(window.crypto && window.crypto.subtle);
@@ -2296,6 +2373,7 @@ function unlock() {
   renderDashboard();
   loadSettingsUi();
   renderDues();
+  showView("home");
 }
 
 function setImportMessage(message, className) {
@@ -2410,7 +2488,16 @@ lockForm.addEventListener("submit", async (event) => {
   }
 });
 
-entryAdd.addEventListener("click", addEntryToPreview);
+entryAdd.addEventListener("click", () => {
+  clearAddMessage();
+  addEntryToPreview();
+});
+entryText.addEventListener("keydown", (event) => {
+  if (event.ctrlKey && event.key === "Enter") {
+    event.preventDefault();
+    entryAdd.click();
+  }
+});
 previewConfirm.addEventListener("click", confirmAndSavePreview);
 previewCancel.addEventListener("click", cancelPreview);
 shopSave.addEventListener("click", saveShopName);
@@ -2425,6 +2512,11 @@ exportCustomersButton.addEventListener("click", exportCustomersCsv);
 backupDownloadButton.addEventListener("click", downloadBackup);
 backupFile.addEventListener("change", restoreBackupFile);
 importFile.addEventListener("change", importChosenFile);
+homeAddFirst.addEventListener("click", () => showView("add"));
+
+for (const button of tabButtons) {
+  button.addEventListener("click", () => showView(button.dataset.tab));
+}
 
 lockButton.addEventListener("click", () => {
   clearOrdersUiForLock();
@@ -2433,6 +2525,8 @@ lockButton.addEventListener("click", () => {
   clearInvoiceForLock();
   clearDataForLock();
   clearImportForLock();
+  clearAddMessage();
+  showView("home");
   showLockScreen();
 });
 
