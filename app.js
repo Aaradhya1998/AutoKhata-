@@ -1991,6 +1991,7 @@ function clearDataForLock() {
 
 const MAX_IMPORT_ROWS = 500;
 const MAX_UNPARSED = 200;
+const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
 function cleanLine(line) {
   return String(line)
@@ -2249,6 +2250,9 @@ const exportCustomersButton = document.getElementById("export-customers");
 const backupDownloadButton = document.getElementById("backup-download");
 const backupFile = document.getElementById("backup-file");
 const dataMessage = document.getElementById("data-message");
+const importFile = document.getElementById("import-file");
+const importMyName = document.getElementById("import-myname");
+const importMessage = document.getElementById("import-message");
 
 let unlocked = false;
 const cryptoAvailable = Boolean(window.crypto && window.crypto.subtle);
@@ -2292,6 +2296,73 @@ function unlock() {
   renderDashboard();
   loadSettingsUi();
   renderDues();
+}
+
+function setImportMessage(message, className) {
+  importMessage.textContent = message;
+  importMessage.className = className;
+}
+
+function importChosenFile() {
+  const file = importFile.files[0];
+
+  if (!file) {
+    return;
+  }
+
+  if (file.size > MAX_FILE_BYTES) {
+    setImportMessage("File is too large (limit 5 MB).", "msg-error");
+    importFile.value = "";
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    const loadedOrders = Store.load("orders");
+    const existingOrders = Array.isArray(loadedOrders) ? loadedOrders : [];
+    const result = importText(
+      reader.result,
+      todayLocal(),
+      importMyName.value,
+      existingOrders
+    );
+
+    if (result.linesRead === 0) {
+      setImportMessage("No lines found in this file.", "msg-error");
+      importFile.value = "";
+      return;
+    }
+
+    previewRows.push(...result.rows);
+    unparsedLines.push(...result.unparsed);
+    renderPreview();
+
+    const modeLabel = result.mode === "chat" ? "WhatsApp chat" : "plain text";
+    let summary = `${modeLabel}: ${result.linesRead} lines read; ${result.rows.length} rows added to the preview; ${result.unparsed.length} lines need a fix; ${result.skipped} skipped; ${result.alreadySaved} already saved.`;
+
+    if (result.rowsCapped) {
+      summary += ` ${result.rowsCapped} rows were found; only the first ${MAX_IMPORT_ROWS} rows were loaded. Import the file in parts.`;
+    }
+
+    if (result.unparsedCapped) {
+      summary += ` ${result.unparsedCapped} fix lines were found; only the first ${MAX_UNPARSED} were loaded. Import the file in parts.`;
+    }
+
+    setImportMessage(summary, "msg-ok");
+    importFile.value = "";
+  });
+  reader.addEventListener("error", () => {
+    setImportMessage("Could not read the file.", "msg-error");
+    importFile.value = "";
+  });
+  reader.readAsText(file);
+}
+
+function clearImportForLock() {
+  importMessage.textContent = "";
+  importMessage.className = "";
+  importMyName.value = "";
+  importFile.value = "";
 }
 
 lockForm.addEventListener("submit", async (event) => {
@@ -2353,6 +2424,7 @@ exportOrdersButton.addEventListener("click", exportOrdersCsv);
 exportCustomersButton.addEventListener("click", exportCustomersCsv);
 backupDownloadButton.addEventListener("click", downloadBackup);
 backupFile.addEventListener("change", restoreBackupFile);
+importFile.addEventListener("change", importChosenFile);
 
 lockButton.addEventListener("click", () => {
   clearOrdersUiForLock();
@@ -2360,6 +2432,7 @@ lockButton.addEventListener("click", () => {
   clearDuesForLock();
   clearInvoiceForLock();
   clearDataForLock();
+  clearImportForLock();
   showLockScreen();
 });
 

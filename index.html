@@ -143,6 +143,11 @@
         <label for="entry-text">One order line per text line</label>
         <textarea id="entry-text" rows="3" placeholder="Ravi 2kg aata 1 tel oil pending"></textarea>
         <button id="entry-add" type="button">Add to preview</button>
+        <label for="import-file">Import .txt file (plain order lines or WhatsApp chat export)</label>
+        <input id="import-file" type="file" accept=".txt,text/plain">
+        <label for="import-myname">My name in the chat (optional)</label>
+        <input id="import-myname" type="text" placeholder="the name shown for your own messages">
+        <p id="import-message" role="status" aria-live="polite"></p>
       </section>
 
       <section id="preview-section" class="hidden">
@@ -200,6 +205,5 @@
   </section>
 
   <script src="app.js"></script>
-  <script src="import_validation_tmp.js"></script>
 </body>
 </html>

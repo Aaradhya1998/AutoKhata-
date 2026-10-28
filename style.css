@@ -126,6 +126,12 @@ button:disabled {
   font: inherit;
 }
 
+#import-file,
+#import-myname {
+  min-height: 36px;
+  font-size: 16px;
+}
+
 table {
   width: 100%;
   margin-bottom: 12px;
@@ -236,11 +242,11 @@ td {
   margin: 0 8px 8px 0;
 }
 
-#data-message.msg-ok {
+.msg-ok {
   color: #111111;
 }
 
-#data-message.msg-error {
+.msg-error {
   color: #8b0000;
   font-weight: 700;
 }
