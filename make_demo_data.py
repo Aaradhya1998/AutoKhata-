@@ -333,8 +333,8 @@ def run_checks(orders_frame, customers_frame, demo_date):
         (orders_frame["status"] == "paid")
         & (orders_frame["date"].map(date.fromisoformat) <= demo_date - timedelta(days=30))
     ]
-    if len(older_paid) < 30:
-        failures.append("there are fewer than 30 fully paid older orders")
+    if len(older_paid) != 30:
+        failures.append(f"expected exactly 30 fully paid older orders, found {len(older_paid)}")
 
     duplicate_count = len(orders_frame) - len(
         orders_frame.drop_duplicates(subset=["customer", "item", "date"])
