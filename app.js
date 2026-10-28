@@ -412,6 +412,326 @@ function runParserTests(text) {
   return results;
 }
 
+/* ===== ORDERS UI ===== */
+
+let previewRows = [];
+let unparsedLines = [];
+
+function createPreviewInput(row, field, type) {
+  const input = document.createElement("input");
+  input.type = type;
+  input.dataset.field = field;
+  input.value = Number.isNaN(row[field]) ? "" : row[field];
+
+  if (type === "number") {
+    input.step = "any";
+
+    if (field === "amount" || field === "paid") {
+      input.min = "0";
+    }
+  }
+
+  input.addEventListener("input", () => {
+    if (type === "number") {
+      row[field] = input.value === "" ? NaN : Number(input.value);
+    } else {
+      row[field] = input.value;
+    }
+  });
+
+  return input;
+}
+
+function appendInputCell(tableRow, input) {
+  const cell = document.createElement("td");
+  cell.appendChild(input);
+  tableRow.appendChild(cell);
+}
+
+function renderUnparsedLines() {
+  unparsedArea.replaceChildren();
+
+  unparsedLines.forEach((line, index) => {
+    const container = document.createElement("div");
+    container.className = "unparsed-line";
+
+    const reason = document.createElement("p");
+    reason.className = "unparsed-reason";
+    reason.textContent = `Could not parse: ${line.reason}`;
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = line.text;
+
+    const retryButton = document.createElement("button");
+    retryButton.type = "button";
+    retryButton.textContent = "Retry";
+    retryButton.addEventListener("click", () => {
+      const result = parseLine(input.value);
+
+      if (result.ok) {
+        previewRows.push(...result.rows);
+        unparsedLines.splice(index, 1);
+      } else {
+        line.text = input.value;
+        line.reason = result.reason;
+      }
+
+      previewError.textContent = "";
+      renderPreview();
+    });
+
+    const skipButton = document.createElement("button");
+    skipButton.type = "button";
+    skipButton.textContent = "Skip";
+    skipButton.addEventListener("click", () => {
+      unparsedLines.splice(index, 1);
+      previewError.textContent = "";
+      renderPreview();
+    });
+
+    container.append(reason, input, retryButton, skipButton);
+    unparsedArea.appendChild(container);
+  });
+}
+
+function renderPreview() {
+  previewBody.replaceChildren();
+
+  previewRows.forEach((row, index) => {
+    const tableRow = document.createElement("tr");
+
+    appendInputCell(tableRow, createPreviewInput(row, "date", "date"));
+    appendInputCell(tableRow, createPreviewInput(row, "customer", "text"));
+    appendInputCell(tableRow, createPreviewInput(row, "item", "text"));
+    appendInputCell(tableRow, createPreviewInput(row, "quantity", "number"));
+    appendInputCell(tableRow, createPreviewInput(row, "unit", "text"));
+    appendInputCell(tableRow, createPreviewInput(row, "amount", "number"));
+
+    const paidInput = createPreviewInput(row, "paid", "number");
+    appendInputCell(tableRow, paidInput);
+
+    const statusCell = document.createElement("td");
+    const statusSelect = document.createElement("select");
+
+    for (const status of ["unpaid", "partial", "paid"]) {
+      const option = document.createElement("option");
+      option.value = status;
+      option.textContent = status;
+      option.selected = row.status === status;
+      statusSelect.appendChild(option);
+    }
+
+    statusSelect.addEventListener("change", () => {
+      row.status = statusSelect.value;
+
+      if (row.status === "paid") {
+        row.paid = row.amount;
+        paidInput.value = Number.isNaN(row.paid) ? "" : row.paid;
+      } else if (row.status === "unpaid") {
+        row.paid = 0;
+        paidInput.value = "0";
+      }
+    });
+    statusCell.appendChild(statusSelect);
+    tableRow.appendChild(statusCell);
+
+    appendInputCell(tableRow, createPreviewInput(row, "due_date", "date"));
+
+    const removeCell = document.createElement("td");
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.textContent = "Remove";
+    removeButton.addEventListener("click", () => {
+      previewRows.splice(index, 1);
+      previewError.textContent = "";
+      renderPreview();
+    });
+    removeCell.appendChild(removeButton);
+    tableRow.appendChild(removeCell);
+
+    previewBody.appendChild(tableRow);
+  });
+
+  renderUnparsedLines();
+  const hasPreviewContent = previewRows.length > 0 || unparsedLines.length > 0;
+  previewSection.classList.toggle("hidden", !hasPreviewContent);
+}
+
+function addEntryToPreview() {
+  const lines = entryText.value.split(/\r?\n/);
+
+  for (const line of lines) {
+    if (!line.trim()) {
+      continue;
+    }
+
+    const result = parseLine(line);
+
+    if (result.ok) {
+      previewRows.push(...result.rows);
+    } else {
+      unparsedLines.push({ text: line, reason: result.reason });
+    }
+  }
+
+  entryText.value = "";
+  previewError.textContent = "";
+  renderPreview();
+}
+
+function validatePreviewRow(row, index) {
+  row.customer = String(row.customer).trim();
+  row.item = String(row.item).trim();
+
+  if (!row.customer) {
+    return `Row ${index + 1}: customer is required.`;
+  }
+
+  if (!row.item) {
+    return `Row ${index + 1}: item is required.`;
+  }
+
+  if (!Number.isFinite(row.quantity) || row.quantity <= 0) {
+    return `Row ${index + 1}: quantity must be greater than 0.`;
+  }
+
+  if (!Number.isFinite(row.amount) || row.amount < 0) {
+    return `Row ${index + 1}: amount must be 0 or more.`;
+  }
+
+  if (!String(row.date).trim()) {
+    return `Row ${index + 1}: date is required.`;
+  }
+
+  if (row.status === "paid") {
+    row.paid = row.amount;
+  } else if (row.status === "unpaid") {
+    row.paid = 0;
+  } else if (row.status === "partial") {
+    if (!Number.isFinite(row.paid) || row.paid <= 0 || row.paid >= row.amount) {
+      return `Row ${index + 1}: partial paid amount must be greater than 0 and less than the amount.`;
+    }
+  } else {
+    return `Row ${index + 1}: status is invalid.`;
+  }
+
+  row.unit = String(row.unit).trim();
+  row.due_date = String(row.due_date).trim();
+  return "";
+}
+
+function normalizedCustomerName(name) {
+  return name.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function confirmAndSavePreview() {
+  for (let index = 0; index < previewRows.length; index += 1) {
+    const error = validatePreviewRow(previewRows[index], index);
+
+    if (error) {
+      previewError.textContent = error;
+      renderPreview();
+      return;
+    }
+  }
+
+  if (unparsedLines.length > 0 &&
+      !window.confirm("Unparsed lines will be discarded. Continue?")) {
+    return;
+  }
+
+  const loadedCustomers = Store.load("customers");
+  const customers = Array.isArray(loadedCustomers) ? loadedCustomers : [];
+
+  for (const row of previewRows) {
+    const customerKey = normalizedCustomerName(row.customer);
+    const existing = customers.find((customer) =>
+      normalizedCustomerName(customer.name) === customerKey
+    );
+
+    if (existing) {
+      row.customer = existing.name;
+    } else {
+      row.customer = row.customer.replace(/\s+/g, " ");
+      customers.push({ name: row.customer, phone: "" });
+    }
+  }
+
+  const loadedOrders = Store.load("orders");
+  const orders = Array.isArray(loadedOrders) ? loadedOrders : [];
+  orders.push(...previewRows);
+  Store.save("customers", customers);
+  Store.save("orders", orders);
+
+  previewRows = [];
+  unparsedLines = [];
+  previewError.textContent = "";
+  renderPreview();
+  renderOrders();
+}
+
+function cancelPreview() {
+  previewRows = [];
+  unparsedLines = [];
+  previewError.textContent = "";
+  renderPreview();
+}
+
+function appendOrderCell(tableRow, value) {
+  const cell = document.createElement("td");
+  cell.textContent = value;
+  tableRow.appendChild(cell);
+}
+
+function renderOrders() {
+  const loadedOrders = Store.load("orders");
+  const orders = Array.isArray(loadedOrders) ? loadedOrders : [];
+  const newestFirst = orders.map((order, index) => ({ order, index })).sort((a, b) => {
+    const dateOrder = String(b.order.date).localeCompare(String(a.order.date));
+    return dateOrder || b.index - a.index;
+  });
+
+  ordersBody.replaceChildren();
+  ordersCount.textContent = `${orders.length} orders`;
+
+  if (newestFirst.length === 0) {
+    const tableRow = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 8;
+    cell.textContent = "No orders yet";
+    tableRow.appendChild(cell);
+    ordersBody.appendChild(tableRow);
+    return;
+  }
+
+  for (const entry of newestFirst) {
+    const tableRow = document.createElement("tr");
+    const order = entry.order;
+    appendOrderCell(tableRow, order.date);
+    appendOrderCell(tableRow, order.customer);
+    appendOrderCell(tableRow, order.item);
+    appendOrderCell(tableRow, order.quantity);
+    appendOrderCell(tableRow, order.amount);
+    appendOrderCell(tableRow, order.paid);
+    appendOrderCell(tableRow, order.status);
+    appendOrderCell(tableRow, order.due_date);
+    ordersBody.appendChild(tableRow);
+  }
+}
+
+function clearOrdersUiForLock() {
+  previewRows = [];
+  unparsedLines = [];
+  entryText.value = "";
+  previewBody.replaceChildren();
+  unparsedArea.replaceChildren();
+  ordersBody.replaceChildren();
+  ordersCount.textContent = "";
+  previewError.textContent = "";
+  previewSection.classList.add("hidden");
+}
+
 /* ===== UI WIRING ===== */
 
 const lockScreen = document.getElementById("lock-screen");
@@ -426,6 +746,16 @@ const lockButton = document.getElementById("lock-button");
 const lockError = document.getElementById("lock-error");
 const parserTestFile = document.getElementById("parser-test-file");
 const parserResults = document.getElementById("parser-results");
+const entryText = document.getElementById("entry-text");
+const entryAdd = document.getElementById("entry-add");
+const previewSection = document.getElementById("preview-section");
+const previewBody = document.getElementById("preview-body");
+const unparsedArea = document.getElementById("unparsed-area");
+const previewError = document.getElementById("preview-error");
+const previewConfirm = document.getElementById("preview-confirm");
+const previewCancel = document.getElementById("preview-cancel");
+const ordersBody = document.getElementById("orders-body");
+const ordersCount = document.getElementById("orders-count");
 
 let unlocked = false;
 const cryptoAvailable = Boolean(window.crypto && window.crypto.subtle);
@@ -465,6 +795,7 @@ function unlock() {
   app.classList.remove("hidden");
   clearInputs();
   showError("");
+  renderOrders();
 }
 
 lockForm.addEventListener("submit", async (event) => {
@@ -512,7 +843,14 @@ lockForm.addEventListener("submit", async (event) => {
   }
 });
 
-lockButton.addEventListener("click", showLockScreen);
+entryAdd.addEventListener("click", addEntryToPreview);
+previewConfirm.addEventListener("click", confirmAndSavePreview);
+previewCancel.addEventListener("click", cancelPreview);
+
+lockButton.addEventListener("click", () => {
+  clearOrdersUiForLock();
+  showLockScreen();
+});
 
 parserTestFile.addEventListener("change", () => {
   const file = parserTestFile.files[0];

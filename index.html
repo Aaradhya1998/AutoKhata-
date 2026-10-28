@@ -33,6 +33,59 @@
     </header>
     <main id="main">
       <p>Unlocked. Features coming in next steps.</p>
+
+      <section id="quick-entry">
+        <h2>Quick entry</h2>
+        <label for="entry-text">One order line per text line</label>
+        <textarea id="entry-text" rows="3" placeholder="Ravi 2kg aata 1 tel oil pending"></textarea>
+        <button id="entry-add" type="button">Add to preview</button>
+      </section>
+
+      <section id="preview-section" class="hidden">
+        <h2>Preview (nothing is saved yet)</h2>
+        <div id="unparsed-area"></div>
+        <table id="preview-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Item</th>
+              <th>Qty</th>
+              <th>Unit</th>
+              <th>Amount</th>
+              <th>Paid</th>
+              <th>Status</th>
+              <th>Due date</th>
+              <th>(remove)</th>
+            </tr>
+          </thead>
+          <tbody id="preview-body"></tbody>
+        </table>
+        <p id="preview-error" role="alert" aria-live="polite"></p>
+        <button id="preview-confirm" type="button">Confirm and save</button>
+        <button id="preview-cancel" type="button">Cancel</button>
+      </section>
+
+      <section id="orders-section">
+        <h2>Orders</h2>
+        <p id="orders-count">0 orders</p>
+        <table id="orders-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Item</th>
+              <th>Qty</th>
+              <th>Amount</th>
+              <th>Paid</th>
+              <th>Status</th>
+              <th>Due date</th>
+            </tr>
+          </thead>
+          <tbody id="orders-body"></tbody>
+        </table>
+      </section>
+
       <details id="dev-tools">
         <summary>Developer tools</summary>
         <label for="parser-test-file">Parser test file</label>

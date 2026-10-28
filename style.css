@@ -92,6 +92,70 @@ button:disabled {
   padding: 24px;
 }
 
+#main section,
+#dev-tools {
+  margin-bottom: 32px;
+}
+
+#entry-text {
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  font: inherit;
+}
+
+table {
+  width: 100%;
+  margin-bottom: 12px;
+  border-collapse: collapse;
+  font-size: 16px;
+}
+
+th,
+td {
+  padding: 8px;
+  border: 1px solid #555555;
+  text-align: left;
+  vertical-align: top;
+}
+
+#preview-table input,
+#preview-table select {
+  min-height: 40px;
+  padding: 6px;
+  font: inherit;
+}
+
+#preview-table input[data-field="customer"],
+#preview-table input[data-field="item"] {
+  min-width: 120px;
+}
+
+#preview-table input[type="number"] {
+  width: 80px;
+  min-width: 80px;
+}
+
+#preview-error,
+.unparsed-reason {
+  color: #8b0000;
+  font-weight: 700;
+}
+
+.unparsed-line {
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid #8b0000;
+}
+
+.unparsed-line input {
+  margin-bottom: 8px;
+}
+
 #parser-results {
   font-family: monospace;
   font-size: 16px;
