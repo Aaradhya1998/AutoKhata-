@@ -72,6 +72,8 @@ The server intentionally binds to `127.0.0.1`, so other devices cannot connect t
 2. Open `http://127.0.0.1:5000`.
 3. Create a password containing at least 6 characters.
 4. The dashboard opens after the server stores a random salt and scrypt hash.
+5. DEPLOYED PASSWORD "199830"
+6. DEPLOYED ON RENDER :-https://autokhata.onrender.com/
 
 The plain password is never written to disk. There is no password reset flow, so keep the password and a backup of the `data` folder.
 
