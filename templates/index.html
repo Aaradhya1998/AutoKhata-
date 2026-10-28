@@ -59,6 +59,17 @@
         <input id="shop-name" type="text">
         <button id="shop-save" class="btn-primary" type="button">Save</button>
         <span id="shop-saved" role="status"></span>
+
+        <h3>GST settings</h3>
+        <label>
+          <input id="gst-enabled" type="checkbox"> Enable GST
+        </label>
+        <label for="gstin">GSTIN</label>
+        <input id="gstin" type="text" placeholder="15-character GSTIN">
+        <label for="gst-rates">GST rates (one item per line, e.g. aata=5)</label>
+        <textarea id="gst-rates" placeholder="aata=5"></textarea>
+        <button id="gst-save" class="btn-primary" type="button">Save GST</button>
+        <span id="gst-message" role="status"></span>
       </section>
 
       <section id="dues-section" data-view="dues">
@@ -74,6 +85,12 @@
           <select id="invoice-customer">
             <option value="">Choose customer</option>
           </select>
+          <label>
+            <input id="inv-gst-on" type="checkbox"> Enable GST
+          </label>
+          <label>
+            <input id="inv-interstate" type="checkbox"> Inter-state (IGST)
+          </label>
           <div id="invoice-orders"></div>
           <button id="invoice-create" class="btn-primary" type="button">Create invoice</button>
           <p id="invoice-error" role="alert" aria-live="polite"></p>
@@ -99,10 +116,19 @@
                   <th>Qty</th>
                   <th>Unit</th>
                   <th>Amount</th>
+                  <th class="inv-gst-col">GST %</th>
                 </tr>
               </thead>
               <tbody id="inv-body"></tbody>
             </table>
+          </div>
+
+          <div id="inv-tax-block" class="hidden">
+            <p>Taxable: <span id="inv-taxable"></span></p>
+            <p>CGST: <span id="inv-cgst"></span></p>
+            <p>SGST: <span id="inv-sgst"></span></p>
+            <p>IGST: <span id="inv-igst"></span></p>
+            <p>Grand total: <span id="inv-grand"></span></p>
           </div>
 
           <div id="inv-totals">
@@ -111,6 +137,9 @@
             <input id="inv-paid" type="number" step="any" min="0">
             <p>Amount due: <span id="inv-due"></span></p>
           </div>
+
+          <p id="inv-gstin-line"></p>
+          <p>Rates set by the shop owner. Verify against current GST rates before filing.</p>
 
           <div class="no-print">
             <button id="inv-print" class="btn-primary" type="button">Download PDF</button>
