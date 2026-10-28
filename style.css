@@ -97,6 +97,24 @@ button:disabled {
   margin-bottom: 32px;
 }
 
+#dash-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dash-total {
+  flex: 1 1 180px;
+  padding: 14px;
+  border: 1px solid #555555;
+  font-size: 16px;
+}
+
+.dash-total strong {
+  display: block;
+  font-size: 20px;
+}
+
 #entry-text {
   display: block;
   width: 100%;
@@ -121,6 +139,58 @@ td {
   border: 1px solid #555555;
   text-align: left;
   vertical-align: top;
+}
+
+#customers-table th:nth-child(2),
+#customers-table th:nth-child(3),
+#customers-table th:nth-child(4),
+#customers-table td:nth-child(2),
+#customers-table td:nth-child(3),
+#customers-table td:nth-child(4) {
+  text-align: right;
+}
+
+.amount-due {
+  color: #8b0000;
+  font-weight: 700;
+}
+
+.dues-bucket {
+  margin-bottom: 20px;
+  padding: 12px;
+  border: 1px solid #555555;
+}
+
+.dues-bucket h3 {
+  margin-top: 0;
+}
+
+.dues-bucket table {
+  margin-bottom: 0;
+}
+
+#action-panel {
+  margin-top: 16px;
+  padding: 16px;
+  border: 2px solid #333333;
+}
+
+#action-panel textarea {
+  width: 100%;
+  min-height: 100px;
+  margin-bottom: 12px;
+  padding: 8px;
+  font: inherit;
+}
+
+#action-panel button {
+  min-height: 40px;
+  margin-right: 8px;
+}
+
+.action-error {
+  color: #8b0000;
+  font-weight: 700;
 }
 
 #preview-table input,

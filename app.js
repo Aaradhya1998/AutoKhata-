@@ -669,6 +669,7 @@ function confirmAndSavePreview() {
   previewError.textContent = "";
   renderPreview();
   renderOrders();
+  renderDashboard();
 }
 
 function cancelPreview() {
@@ -732,6 +733,254 @@ function clearOrdersUiForLock() {
   previewSection.classList.add("hidden");
 }
 
+/* ===== DASHBOARD ===== */
+
+function roundMoney(value) {
+  return Number(value.toFixed(2));
+}
+
+function orderMoney(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function customerGroupKey(name) {
+  return String(name).trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function dashboardItemName(item) {
+  return String(item).trim().toLowerCase();
+}
+
+function computeDashboard(orders, today) {
+  const customerMap = new Map();
+  const itemCounts = new Map();
+  const purchaseGroups = new Map();
+  const month = today.slice(0, 7);
+  let salesToday = 0;
+  let salesMonth = 0;
+  let totalDues = 0;
+
+  for (const order of orders) {
+    const amount = orderMoney(order.amount);
+    const paid = orderMoney(order.paid);
+    const balance = amount - paid;
+    const date = String(order.date);
+    const customerKey = customerGroupKey(order.customer);
+    const displayName = String(order.customer).trim().replace(/\s+/g, " ");
+    const item = dashboardItemName(order.item);
+
+    if (date === today) {
+      salesToday += amount;
+    }
+
+    if (date.startsWith(month)) {
+      salesMonth += amount;
+    }
+
+    if (balance > 0) {
+      totalDues += balance;
+    }
+
+    if (!customerMap.has(customerKey)) {
+      customerMap.set(customerKey, {
+        name: displayName,
+        total: 0,
+        paid: 0,
+        oldestUnpaid: ""
+      });
+    }
+
+    const customer = customerMap.get(customerKey);
+    customer.total += amount;
+    customer.paid += paid;
+
+    if (balance > 0 && (!customer.oldestUnpaid || date < customer.oldestUnpaid)) {
+      customer.oldestUnpaid = date;
+    }
+
+    if (item) {
+      itemCounts.set(item, (itemCounts.get(item) || 0) + 1);
+
+      const groupKey = `${customerKey}\u0000${date}`;
+
+      if (!purchaseGroups.has(groupKey)) {
+        purchaseGroups.set(groupKey, new Set());
+      }
+
+      purchaseGroups.get(groupKey).add(item);
+    }
+  }
+
+  const customersWithDues = Array.from(customerMap.values()).filter((customer) =>
+    customer.total - customer.paid > 0
+  ).length;
+  const customers = Array.from(customerMap.values(), (customer) => ({
+    name: customer.name,
+    total: roundMoney(customer.total),
+    paid: roundMoney(customer.paid),
+    balance: roundMoney(customer.total - customer.paid),
+    oldestUnpaid: customer.oldestUnpaid
+  })).sort((a, b) =>
+    b.balance - a.balance || a.name.localeCompare(b.name)
+  );
+
+  const topCustomers = customers.map((customer) => ({
+    name: customer.name,
+    total: customer.total
+  })).sort((a, b) =>
+    b.total - a.total || a.name.localeCompare(b.name)
+  ).slice(0, 5);
+
+  const topItems = Array.from(itemCounts, ([item, count]) => ({ item, count }))
+    .sort((a, b) => b.count - a.count || a.item.localeCompare(b.item))
+    .slice(0, 5);
+
+  const pairCounts = new Map();
+
+  for (const itemSet of purchaseGroups.values()) {
+    const items = Array.from(itemSet).sort((a, b) => a.localeCompare(b));
+
+    for (let first = 0; first < items.length; first += 1) {
+      for (let second = first + 1; second < items.length; second += 1) {
+        const key = `${items[first]}\u0000${items[second]}`;
+        pairCounts.set(key, (pairCounts.get(key) || 0) + 1);
+      }
+    }
+  }
+
+  const pairs = Array.from(pairCounts, ([key, count]) => {
+    const [a, b] = key.split("\u0000");
+    return { a, b, count };
+  }).sort((a, b) =>
+    b.count - a.count || a.a.localeCompare(b.a) || a.b.localeCompare(b.b)
+  ).slice(0, 10);
+
+  return {
+    salesToday: roundMoney(salesToday),
+    salesMonth: roundMoney(salesMonth),
+    totalDues: roundMoney(totalDues),
+    customersWithDues,
+    customers,
+    topCustomers,
+    topItems,
+    pairs
+  };
+}
+
+function formatMoney(number) {
+  return `₹${number.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+}
+
+function appendDashboardTotal(label, value) {
+  const box = document.createElement("div");
+  box.className = "dash-total";
+
+  const title = document.createElement("span");
+  title.textContent = label;
+
+  const total = document.createElement("strong");
+  total.textContent = value;
+
+  box.append(title, total);
+  dashTotals.appendChild(box);
+}
+
+function renderRankedList(list, entries, textForEntry) {
+  list.replaceChildren();
+
+  if (entries.length === 0) {
+    const item = document.createElement("li");
+    item.textContent = "No data yet";
+    list.appendChild(item);
+    return;
+  }
+
+  for (const entry of entries) {
+    const item = document.createElement("li");
+    item.textContent = textForEntry(entry);
+    list.appendChild(item);
+  }
+}
+
+function appendDashboardCell(tableRow, value, className = "") {
+  const cell = document.createElement("td");
+  cell.textContent = value;
+
+  if (className) {
+    cell.className = className;
+  }
+
+  tableRow.appendChild(cell);
+}
+
+function renderDashboard() {
+  const loadedOrders = Store.load("orders");
+  const orders = Array.isArray(loadedOrders) ? loadedOrders : [];
+  const dashboard = computeDashboard(orders, todayLocal());
+
+  dashTotals.replaceChildren();
+  appendDashboardTotal("Sales today", formatMoney(dashboard.salesToday));
+  appendDashboardTotal("Sales this month", formatMoney(dashboard.salesMonth));
+  appendDashboardTotal("Total dues", formatMoney(dashboard.totalDues));
+  appendDashboardTotal("Customers with dues", String(dashboard.customersWithDues));
+
+  renderRankedList(topCustomersList, dashboard.topCustomers, (customer) =>
+    `${customer.name} - ${formatMoney(customer.total)}`
+  );
+  renderRankedList(topItemsList, dashboard.topItems, (item) =>
+    `${item.item} - ${item.count} orders`
+  );
+
+  customersBody.replaceChildren();
+
+  if (dashboard.customers.length === 0) {
+    const tableRow = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = 5;
+    cell.textContent = "No customers yet";
+    tableRow.appendChild(cell);
+    customersBody.appendChild(tableRow);
+  } else {
+    for (const customer of dashboard.customers) {
+      const tableRow = document.createElement("tr");
+      appendDashboardCell(tableRow, customer.name);
+      appendDashboardCell(tableRow, formatMoney(customer.total));
+      appendDashboardCell(tableRow, formatMoney(customer.paid));
+      appendDashboardCell(
+        tableRow,
+        formatMoney(customer.balance),
+        customer.balance > 0 ? "amount-due" : ""
+      );
+      appendDashboardCell(tableRow, customer.oldestUnpaid || "-");
+      customersBody.appendChild(tableRow);
+    }
+  }
+
+  pairsNote.textContent = "Items count as bought together when the same customer buys them on the same date.";
+  pairsList.replaceChildren();
+
+  if (dashboard.pairs.length === 0) {
+    const item = document.createElement("li");
+    item.textContent = "No pairs yet";
+    pairsList.appendChild(item);
+  } else {
+    for (const pair of dashboard.pairs) {
+      const item = document.createElement("li");
+      item.textContent = `${pair.a} + ${pair.b} - in ${pair.count} orders`;
+      pairsList.appendChild(item);
+    }
+  }
+}
+
+function clearDashboardForLock() {
+  dashTotals.replaceChildren();
+  topCustomersList.replaceChildren();
+  topItemsList.replaceChildren();
+  customersBody.replaceChildren();
+  pairsList.replaceChildren();
+}
+
 /* ===== UI WIRING ===== */
 
 const lockScreen = document.getElementById("lock-screen");
@@ -756,6 +1005,12 @@ const previewConfirm = document.getElementById("preview-confirm");
 const previewCancel = document.getElementById("preview-cancel");
 const ordersBody = document.getElementById("orders-body");
 const ordersCount = document.getElementById("orders-count");
+const dashTotals = document.getElementById("dash-totals");
+const topCustomersList = document.getElementById("top-customers");
+const topItemsList = document.getElementById("top-items");
+const customersBody = document.getElementById("customers-body");
+const pairsNote = document.getElementById("pairs-note");
+const pairsList = document.getElementById("pairs-list");
 
 let unlocked = false;
 const cryptoAvailable = Boolean(window.crypto && window.crypto.subtle);
@@ -796,6 +1051,7 @@ function unlock() {
   clearInputs();
   showError("");
   renderOrders();
+  renderDashboard();
 }
 
 lockForm.addEventListener("submit", async (event) => {
@@ -849,6 +1105,7 @@ previewCancel.addEventListener("click", cancelPreview);
 
 lockButton.addEventListener("click", () => {
   clearOrdersUiForLock();
+  clearDashboardForLock();
   showLockScreen();
 });
 

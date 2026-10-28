@@ -32,7 +32,50 @@
       <button id="lock-button" type="button">Lock</button>
     </header>
     <main id="main">
-      <p>Unlocked. Features coming in next steps.</p>
+      <section id="dashboard-section">
+        <h2>Dashboard</h2>
+        <div id="dash-totals"></div>
+        <h3>Top customers</h3>
+        <ol id="top-customers"></ol>
+        <h3>Top items</h3>
+        <ol id="top-items"></ol>
+      </section>
+
+      <section id="settings-section">
+        <h2>Settings</h2>
+        <label for="shop-name">Shop name</label>
+        <input id="shop-name" type="text">
+        <button id="shop-save" type="button">Save</button>
+        <span id="shop-saved" role="status"></span>
+      </section>
+
+      <section id="dues-section">
+        <h2>Dues</h2>
+        <div id="dues-buckets"></div>
+        <div id="action-panel" class="hidden"></div>
+      </section>
+
+      <section id="customers-section">
+        <h2>Customers</h2>
+        <table id="customers-table">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Total sales</th>
+              <th>Paid</th>
+              <th>Balance due</th>
+              <th>Oldest unpaid date</th>
+            </tr>
+          </thead>
+          <tbody id="customers-body"></tbody>
+        </table>
+      </section>
+
+      <section id="pairs-section">
+        <h2>Bought together</h2>
+        <p id="pairs-note"></p>
+        <ol id="pairs-list"></ol>
+      </section>
 
       <section id="quick-entry">
         <h2>Quick entry</h2>
